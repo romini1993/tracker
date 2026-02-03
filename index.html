@@ -13,31 +13,43 @@
         .loader { border: 2px solid #1e293b; border-top: 2px solid #eab308; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none; }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .word-box { position: relative; }
+        .word-num { position: absolute; left: 8px; top: 6px; font-size: 8px; color: #475569; font-weight: bold; }
     </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-black text-yellow-400 italic tracking-wider">PHRASE HUNTER</h1>
-            <button onclick="clearAll()" class="text-[10px] bg-red-600/20 text-red-500 border border-red-500/50 px-3 py-1 rounded-full font-bold hover:bg-red-600 hover:text-white transition">CLEAR ALL</button>
+            <button onclick="clearAll()" class="text-[10px] bg-red-600/20 text-red-500 border border-red-500/50 px-3 py-1 rounded-full font-bold">CLEAR ALL</button>
         </div>
 
         <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl mb-6">
             <div class="mb-5">
                 <label class="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Cari Clue Kata</label>
                 <div class="flex gap-2">
-                    <input id="clue" type="text" placeholder="Awalan (Misal: c)" class="w-1/3 bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 font-bold text-center uppercase outline-none">
+                    <input id="clue" type="text" placeholder="Awalan" class="w-1/3 bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 font-bold text-center uppercase outline-none">
                     <input id="searchClue" type="text" oninput="filterWords()" placeholder="Cari teka-teki kata..." class="w-2/3 bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 text-sm outline-none">
                 </div>
                 <div id="wordSuggestions" class="flex flex-wrap gap-2 mt-2 max-h-24 overflow-y-auto"></div>
             </div>
 
-            <div id="wordGrid" class="grid-container mb-6">
-                </div>
+            <div class="grid-container mb-6">
+                <div class="word-box"><span class="word-num">1</span><input id="word-1" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none" placeholder="TARGET"></div>
+                <div class="word-box"><span class="word-num">2</span><input id="word-2" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">3</span><input id="word-3" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">4</span><input id="word-4" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">5</span><input id="word-5" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">6</span><input id="word-6" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">7</span><input id="word-7" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">8</span><input id="word-8" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">9</span><input id="word-9" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">10</span><input id="word-10" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">11</span><input id="word-11" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+                <div class="word-box"><span class="word-num">12</span><input id="word-12" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
+            </div>
 
-            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center">
+            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">
                 TEMBAK SEKARANG
             </button>
         </div>
@@ -48,130 +60,16 @@
         </div>
 
         <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4 font-mono"></div>
-        
         <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
         const wordlist = ethers.utils.wordlists.en;
 
-        // Generate 12 Inputs
-        const grid = document.getElementById('wordGrid');
-        for(let i=1; i<=12; i++) {
-            grid.innerHTML += `
-                <div class="relative">
-                    <span class="absolute left-2 top-1.5 text-[8px] text-slate-600 font-bold">${i}</span>
-                    <input id="word-${i}" type="text" 
-                    class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] text-white font-medium outline-none" 
-                    placeholder="${i === 1 ? 'TARGET' : ''}">
-                </div>
-            `;
-        }
-
-        // --- FITUR AUTO PASTE (SMART SPLIT) ---
+        // FITUR AUTO PASTE
         document.addEventListener('paste', function (e) {
             if (e.target.classList.contains('word-input')) {
                 e.preventDefault();
                 let data = (e.clipboardData || window.clipboardData).getData('text');
                 let words = data.trim().split(/\s+/);
-                let startIdx = parseInt(e.target.id.split('-')[1]);
-                
-                words.forEach((word, index) => {
-                    let currentBox = document.getElementById(`word-${startIdx + index}`);
-                    if (currentBox) {
-                        currentBox.value = word.toLowerCase().replace(/[^a-z]/g, '');
-                    }
-                });
-            }
-        });
-
-        // --- FITUR SEARCH CLUE ---
-        function filterWords() {
-            const input = document.getElementById('searchClue').value.toLowerCase().trim();
-            const suggestDiv = document.getElementById('wordSuggestions');
-            suggestDiv.innerHTML = "";
-            if (input.length < 1) return;
-
-            for (let i = 0; i < 2048; i++) {
-                const word = wordlist.getWord(i);
-                if (word.includes(input)) {
-                    const btn = document.createElement('button');
-                    btn.className = "text-[9px] bg-slate-800 border border-slate-700 hover:bg-yellow-500 hover:text-black px-2 py-1 rounded-lg transition font-bold uppercase";
-                    btn.innerText = word;
-                    btn.onclick = () => {
-                        document.getElementById('word-1').value = word;
-                        suggestDiv.innerHTML = "";
-                        document.getElementById('searchClue').value = "";
-                    };
-                    suggestDiv.appendChild(btn);
-                }
-            }
-        }
-
-        // --- FITUR CLEAR ALL ---
-        function clearAll() {
-            for(let i=1; i<=12; i++) {
-                document.getElementById(`word-${i}`).value = "";
-            }
-            document.getElementById('results').innerHTML = "";
-            document.getElementById('status').innerText = "";
-            document.getElementById('clue').value = "";
-            document.getElementById('searchClue').value = "";
-        }
-
-        // --- CORE HUNTING LOGIC ---
-        async function hunt() {
-            const clue = document.getElementById('clue').value.toLowerCase().trim();
-            const resultDiv = document.getElementById('results');
-            const statusDiv = document.getElementById('status');
-            const loader = document.getElementById('loadingStatus');
-            
-            let words = [];
-            for (let i = 1; i <= 12; i++) {
-                words.push(document.getElementById(`word-${i}`).value.trim().toLowerCase());
-            }
-
-            const targetEmpty = words[0] === "";
-            resultDiv.innerHTML = "";
-            loader.classList.remove('hidden');
-
-            setTimeout(async () => {
-                let found = 0;
-                for (let i = 0; i < 2048; i++) {
-                    const testWord = wordlist.getWord(i);
-                    if (clue && !testWord.startsWith(clue)) continue;
-                    if (!targetEmpty && testWord !== words[0]) continue;
-
-                    let currentWords = [...words];
-                    currentWords[0] = testWord;
-                    const phrase = currentWords.join(" ");
-                    
-                    if (ethers.utils.isValidMnemonic(phrase)) {
-                        found++;
-                        const wallet = ethers.Wallet.fromMnemonic(phrase);
-                        const card = document.createElement('div');
-                        card.className = "bg-slate-900 border-l-4 border-yellow-500 p-4 rounded-xl shadow-lg fade-in";
-                        card.innerHTML = `
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-yellow-400 text-xs font-black">MATCH #${found}: ${testWord.toUpperCase()}</span>
-                                <button onclick="navigator.clipboard.writeText('${phrase}')" class="text-[9px] bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 font-bold active:bg-yellow-500 active:text-black">COPY</button>
-                            </div>
-                            <p class="text-[10px] text-slate-500 break-all mb-3 font-mono leading-relaxed">${phrase}</p>
-                            <a href="https://debank.com/profile/${wallet.address}" target="_blank" class="flex justify-between items-center bg-black/40 p-3 rounded-xl hover:bg-black/60 transition">
-                                <code class="text-[9px] text-blue-400 truncate mr-4">${wallet.address}</code>
-                                <span class="text-[9px] text-yellow-500 font-black italic">DEBANK ↗</span>
-                            </a>
-                        `;
-                        resultDiv.appendChild(card);
-                    }
-                }
-                loader.classList.add('hidden');
-                statusDiv.innerText = `Scan Selesai! Menemukan ${found} hasil valid.`;
-            }, 300);
-        }
-
-        // PWA (sw.js)
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-    </script>
-</body>
-</html>
+                let startIdx = parseInt(e.target.id.split('-')
