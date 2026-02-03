@@ -3,107 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minas Phrase Hunter</title>
+    <title>Minas Phrase Hunter v3</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .word-input:focus { border-color: #eab308; box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2); }
         body { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen">
-    <div class="max-w-md mx-auto p-6">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-2xl font-black text-yellow-400 italic">MINAS HUNTER v2</h1>
-            <div id="installBtn" class="hidden bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full animate-bounce">INSTALL</div>
-        </div>
-
-        <div class="space-y-4 bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+<body class="bg-slate-950 text-white min-h-screen font-sans">
+    <div class="max-w-xl mx-auto p-4">
+        <div class="flex items-center justify-between mb-6">
             <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">11 Kata (Urutan 2-12)</label>
-                <textarea id="partial" class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 focus:border-yellow-500 outline-none text-sm h-24">observe myself type say conduct scorpion gossip tilt jar tuna plastic</textarea>
+                <h1 class="text-2xl font-black text-yellow-400 italic leading-none">MINAS HUNTER</h1>
+                <p class="text-[10px] text-slate-500 font-mono mt-1">v3.0 - MULTI PHRASE MODE</p>
             </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Clue Awal</label>
-                    <input id="clue" type="text" value="c" class="w-full p-3 bg-slate-800 rounded-xl border border-slate-700 text-center font-bold text-yellow-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Network</label>
-                    <div class="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center text-xs font-bold">ETH / BSC</div>
-                </div>
-            </div>
-
-            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition">SCAN PHRASE</button>
+            <button id="installBtn" class="hidden bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-full animate-bounce">INSTALL APP</button>
         </div>
 
-        <div id="status" class="mt-4 text-center text-[10px] text-slate-500 font-mono italic"></div>
-        <div id="results" class="mt-6 space-y-3"></div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl mb-6">
+            <div class="flex gap-4 mb-4">
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Mode Phrase</label>
+                    <div class="flex bg-slate-800 p-1 rounded-xl">
+                        <button onclick="setLength(12)" id="btn12" class="flex-1 py-2 text-xs font-bold rounded-lg bg-yellow-500 text-black transition">12 WORDS</button>
+                        <button onclick="setLength(24)" id="btn24" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 transition">24 WORDS</button>
+                    </div>
+                </div>
+                <div class="w-1/3">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Clue Huruf</label>
+                    <input id="clue" type="text" maxlength="1" placeholder="?" class="w-full p-2 bg-slate-800 rounded-xl border border-slate-700 text-center font-bold text-yellow-400 uppercase outline-none">
+                </div>
+            </div>
+
+            <div id="wordGrid" class="grid grid-cols-3 gap-2 mb-4">
+                </div>
+
+            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition">SCAN COMBINATIONS</button>
+        </div>
+
+        <div id="status" class="mb-4 text-center text-[10px] text-slate-500 font-mono italic"></div>
+        <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
-        // Logic Hunter
-        async function hunt() {
-            const partial = document.getElementById('partial').value.trim();
-            const clue = document.getElementById('clue').value.toLowerCase().trim();
-            const resultDiv = document.getElementById('results');
-            const statusDiv = document.getElementById('status');
-            resultDiv.innerHTML = "";
-            statusDiv.innerText = "Scanning BIP-39 Dictionary...";
+        let currentLength = 12;
 
-            const wordlist = ethers.utils.wordlists.en;
-            let count = 0;
-
-            for (let i = 0; i < 2048; i++) {
-                const word = wordlist.getWord(i);
-                if (clue && !word.startsWith(clue)) continue;
-                const mnemonic = `${word} ${partial}`;
-                
-                if (ethers.utils.isValidMnemonic(mnemonic)) {
-                    count++;
-                    const wallet = ethers.Wallet.fromMnemonic(mnemonic);
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-900 border-l-4 border-green-500 p-4 rounded-xl shadow-lg";
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-yellow-400 font-bold">#${count} : ${word.toUpperCase()}</span>
-                            <button onclick="navigator.clipboard.writeText('${mnemonic}')" class="text-[10px] bg-slate-800 px-3 py-1 rounded-lg border border-slate-700">Copy</button>
-                        </div>
-                        <p class="text-[10px] text-slate-400 break-all mb-3">${mnemonic}</p>
-                        <a href="https://etherscan.io/address/${wallet.address}" target="_blank" class="flex items-center justify-between bg-black/40 p-2 rounded-lg">
-                            <code class="text-[9px] text-blue-400">${wallet.address.substring(0,25)}...</code>
-                            <span class="text-[9px] text-yellow-500 font-bold italic font-mono">CEK SALDO →</span>
-                        </a>
-                    `;
-                    resultDiv.appendChild(card);
-                }
-            }
-            statusDiv.innerText = `Scan Selesai. Ketemu ${count} valid.`;
-        }
-
-        // Service Worker buat PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
-        // Install Logic
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installBtn').classList.remove('hidden');
-        });
-
-        document.getElementById('installBtn').addEventListener('click', () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => {
-                    document.getElementById('installBtn').classList.add('hidden');
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+        // Generate input boxes
+        function generateInputs(len) {
+            const grid = document.getElementById('wordGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= len; i++) {
+                grid.innerHTML += `
+                    <div class="relative
