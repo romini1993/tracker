@@ -3,27 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minas Hunter - Grid Mode</title>
+    <title>Phrase Hunter</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         input:focus { border-color: #eab308 !important; outline: none; }
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        /* Animasi Muter */
+        .loader {
+            border: 2px solid #1e293b;
+            border-top: 2px solid #eab308;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold text-yellow-400">MINAS HUNTER <span class="text-[10px] bg-yellow-500 text-black px-1 rounded ml-1">3x4 MODE</span></h1>
-            <div id="installBtn" class="hidden text-[10px] bg-white text-black font-bold px-2 py-1 rounded-full cursor-pointer">INSTALL</div>
+            <h1 class="text-2xl font-black text-yellow-400 italic tracking-wider">PHRASE HUNTER</h1>
+            <div id="installBtn" class="hidden text-[10px] bg-white text-black font-bold px-3 py-1 rounded-full cursor-pointer">INSTALL APP</div>
         </div>
 
-        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-2xl mb-6">
-            <div class="flex items-center gap-3 mb-4">
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl mb-6">
+            <div class="flex items-center gap-3 mb-5">
                 <div class="flex-1">
-                    <label class="block text-[10px] text-slate-500 font-bold mb-1">CLUE AWALAN (C)</label>
-                    <input id="clue" type="text" value="c" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg text-yellow-400 font-bold text-center uppercase">
+                    <label class="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Clue Awalan</label>
+                    <input id="clue" type="text" value="c" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 font-bold text-center uppercase outline-none">
                 </div>
             </div>
 
@@ -32,25 +46,100 @@
                     for(let i=1; i<=12; i++) {
                         document.write(`
                             <div class="relative">
-                                <span class="absolute left-1.5 top-1 text-[8px] text-slate-500 font-bold">${i}</span>
+                                <span class="absolute left-2 top-1.5 text-[8px] text-slate-600 font-bold">${i}</span>
                                 <input id="word-${i}" type="text" 
-                                class="w-full bg-slate-800 border border-slate-700 pt-4 pb-2 px-2 rounded-lg text-center text-xs text-white" 
-                                placeholder="${i === 1 ? '---' : ''}">
+                                class="w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] text-white font-medium" 
+                                placeholder="${i === 1 ? 'TARGET' : ''}">
                             </div>
                         `);
                     }
                 </script>
             </div>
 
-            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl shadow-lg transition transform active:scale-95">
-                TEMBAK PHRASE
+            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center">
+                <span>TEMBAK SEKARANG</span>
             </button>
         </div>
 
-        <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4"></div>
+        <div id="loadingStatus" class="hidden text-center p-4 bg-slate-900/50 rounded-xl mb-4 border border-slate-800">
+            <div class="loader"></div>
+            <span class="text-xs text-yellow-500 font-bold animate-pulse font-mono uppercase tracking-tighter">Sistem sedang bekerja meload data...</span>
+        </div>
+
+        <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4 font-mono"></div>
+        
         <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
-        // Isi otomatis buat contoh (sesuai gambar elu)
-        const sample
+        // Contoh Data Awal
+        const sample = ["", "observe", "myself", "type", "say", "conduct", "scorpion", "gossip", "tilt", "jar", "tuna", "plastic"];
+        sample.forEach((w, i) => { if(w) document.getElementById(`word-${i+1}`).value = w; });
+
+        async function hunt() {
+            const clue = document.getElementById('clue').value.toLowerCase().trim();
+            const resultDiv = document.getElementById('results');
+            const statusDiv = document.getElementById('status');
+            const loader = document.getElementById('loadingStatus');
+            
+            let words = [];
+            for (let i = 1; i <= 12; i++) {
+                words.push(document.getElementById(`word-${i}`).value.trim().toLowerCase());
+            }
+
+            resultDiv.innerHTML = "";
+            statusDiv.innerText = "";
+            loader.classList.remove('hidden'); // Munculin loading
+
+            // Kasih delay dikit biar animasi loading kelihatan
+            setTimeout(async () => {
+                const wordlist = ethers.utils.wordlists.en;
+                let found = 0;
+
+                for (let i = 0; i < 2048; i++) {
+                    const testWord = wordlist.getWord(i);
+                    if (clue && !testWord.startsWith(clue)) continue;
+
+                    words[0] = testWord; 
+                    const phrase = words.join(" ");
+                    
+                    if (ethers.utils.isValidMnemonic(phrase)) {
+                        found++;
+                        const wallet = ethers.Wallet.fromMnemonic(phrase);
+                        const card = document.createElement('div');
+                        card.className = "bg-slate-900 border-l-4 border-yellow-500 p-4 rounded-xl shadow-lg animate-in fade-in duration-500";
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-yellow-400 text-xs font-black">MATCH #${found}: ${testWord.toUpperCase()}</span>
+                                <button onclick="navigator.clipboard.writeText('${phrase}')" class="text-[9px] bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 active:bg-yellow-500 active:text-black font-bold transition">COPY</button>
+                            </div>
+                            <p class="text-[10px] text-slate-500 break-all mb-3 font-mono leading-relaxed">${phrase}</p>
+                            <a href="https://debank.com/profile/${wallet.address}" target="_blank" class="flex justify-between items-center bg-black/40 p-3 rounded-xl hover:bg-black/60 transition">
+                                <code class="text-[9px] text-blue-400 truncate mr-4">${wallet.address}</code>
+                                <span class="text-[9px] text-yellow-500 font-black shrink-0 italic">DEBANK ↗</span>
+                            </a>
+                        `;
+                        resultDiv.appendChild(card);
+                    }
+                }
+                
+                loader.classList.add('hidden'); // Sembunyiin loading
+                statusDiv.innerText = `Scan Selesai! Menemukan ${found} kombinasi valid.`;
+                if(found === 0) statusDiv.innerText = "Gak ada yang cocok, bro. Cek lagi katanya!";
+            }, 500);
+        }
+
+        // PWA & Install
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        let defPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => { 
+            e.preventDefault(); 
+            defPrompt = e; 
+            document.getElementById('installBtn').classList.remove('hidden'); 
+        });
+        document.getElementById('installBtn').addEventListener('click', () => { 
+            if (defPrompt) { defPrompt.prompt(); } 
+        });
+    </script>
+</body>
+</html>
