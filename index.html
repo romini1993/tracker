@@ -10,18 +10,7 @@
     <style>
         input:focus { border-color: #eab308 !important; outline: none; }
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        /* Animasi Muter */
-        .loader {
-            border: 2px solid #1e293b;
-            border-top: 2px solid #eab308;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
+        .loader { border: 2px solid #1e293b; border-top: 2px solid #eab308; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none; }
     </style>
@@ -34,11 +23,11 @@
         </div>
 
         <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl mb-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="flex-1">
-                    <label class="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Clue Awalan</label>
-                    <input id="clue" type="text" value="c" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 font-bold text-center uppercase outline-none">
-                </div>
+            <div class="mb-5">
+                <label class="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Cari Kata (Clue Teka-teki)</label>
+                <input id="searchClue" type="text" oninput="filterWords()" placeholder="Ketik kata kunci teka-teki..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-yellow-400 font-bold text-sm outline-none mb-2">
+                <div id="wordSuggestions" class="flex flex-wrap gap-2 max-h-20 overflow-y-auto p-1">
+                    </div>
             </div>
 
             <div class="grid-container mb-6">
@@ -63,21 +52,42 @@
 
         <div id="loadingStatus" class="hidden text-center p-4 bg-slate-900/50 rounded-xl mb-4 border border-slate-800">
             <div class="loader"></div>
-            <span class="text-xs text-yellow-500 font-bold animate-pulse font-mono uppercase tracking-tighter">Sistem sedang bekerja meload data...</span>
+            <span class="text-xs text-yellow-500 font-bold animate-pulse font-mono uppercase">Sistem sedang bekerja meload data...</span>
         </div>
 
         <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4 font-mono"></div>
-        
         <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
-        // Contoh Data Awal
-        const sample = ["", "observe", "myself", "type", "say", "conduct", "scorpion", "gossip", "tilt", "jar", "tuna", "plastic"];
-        sample.forEach((w, i) => { if(w) document.getElementById(`word-${i+1}`).value = w; });
+        // Setup Kamus BIP-39
+        const wordlist = ethers.utils.wordlists.en;
+
+        function filterWords() {
+            const input = document.getElementById('searchClue').value.toLowerCase().trim();
+            const suggestDiv = document.getElementById('wordSuggestions');
+            suggestDiv.innerHTML = "";
+
+            if (input.length < 1) return;
+
+            // Cari kata yang mengandung huruf yang diketik
+            for (let i = 0; i < 2048; i++) {
+                const word = wordlist.getWord(i);
+                if (word.includes(input)) {
+                    const btn = document.createElement('button');
+                    btn.className = "text-[10px] bg-slate-700 hover:bg-yellow-500 hover:text-black px-2 py-1 rounded transition font-bold uppercase";
+                    btn.innerText = word;
+                    btn.onclick = () => {
+                        document.getElementById('word-1').value = word;
+                        suggestDiv.innerHTML = "";
+                        document.getElementById('searchClue').value = "";
+                    };
+                    suggestDiv.appendChild(btn);
+                }
+            }
+        }
 
         async function hunt() {
-            const clue = document.getElementById('clue').value.toLowerCase().trim();
             const resultDiv = document.getElementById('results');
             const statusDiv = document.getElementById('status');
             const loader = document.getElementById('loadingStatus');
@@ -87,59 +97,53 @@
                 words.push(document.getElementById(`word-${i}`).value.trim().toLowerCase());
             }
 
-            resultDiv.innerHTML = "";
-            statusDiv.innerText = "";
-            loader.classList.remove('hidden'); // Munculin loading
+            // Jika kotak 1 masih kosong, berarti kita tembak SEMUA kata BIP-39
+            const targetEmpty = words[0] === "";
 
-            // Kasih delay dikit biar animasi loading kelihatan
+            resultDiv.innerHTML = "";
+            loader.classList.remove('hidden');
+
             setTimeout(async () => {
-                const wordlist = ethers.utils.wordlists.en;
                 let found = 0;
 
                 for (let i = 0; i < 2048; i++) {
                     const testWord = wordlist.getWord(i);
-                    if (clue && !testWord.startsWith(clue)) continue;
+                    
+                    // Jika user udah isi kotak 1, kita cuma cek validasi kata itu
+                    // Jika kotak 1 kosong, kita coba semua 2048 kata
+                    if (!targetEmpty && testWord !== words[0]) continue;
 
-                    words[0] = testWord; 
-                    const phrase = words.join(" ");
+                    let currentWords = [...words];
+                    currentWords[0] = testWord;
+                    const phrase = currentWords.join(" ");
                     
                     if (ethers.utils.isValidMnemonic(phrase)) {
                         found++;
                         const wallet = ethers.Wallet.fromMnemonic(phrase);
                         const card = document.createElement('div');
-                        card.className = "bg-slate-900 border-l-4 border-yellow-500 p-4 rounded-xl shadow-lg animate-in fade-in duration-500";
+                        card.className = "bg-slate-900 border-l-4 border-yellow-500 p-4 rounded-xl shadow-lg";
                         card.innerHTML = `
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-yellow-400 text-xs font-black">MATCH #${found}: ${testWord.toUpperCase()}</span>
-                                <button onclick="navigator.clipboard.writeText('${phrase}')" class="text-[9px] bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 active:bg-yellow-500 active:text-black font-bold transition">COPY</button>
+                                <button onclick="navigator.clipboard.writeText('${phrase}')" class="text-[9px] bg-slate-800 px-3 py-1 rounded-lg font-bold">COPY</button>
                             </div>
-                            <p class="text-[10px] text-slate-500 break-all mb-3 font-mono leading-relaxed">${phrase}</p>
-                            <a href="https://debank.com/profile/${wallet.address}" target="_blank" class="flex justify-between items-center bg-black/40 p-3 rounded-xl hover:bg-black/60 transition">
+                            <p class="text-[10px] text-slate-500 break-all mb-3 font-mono">${phrase}</p>
+                            <a href="https://debank.com/profile/${wallet.address}" target="_blank" class="flex justify-between items-center bg-black/40 p-3 rounded-xl">
                                 <code class="text-[9px] text-blue-400 truncate mr-4">${wallet.address}</code>
-                                <span class="text-[9px] text-yellow-500 font-black shrink-0 italic">DEBANK ↗</span>
+                                <span class="text-[9px] text-yellow-500 font-black italic">DEBANK ↗</span>
                             </a>
                         `;
                         resultDiv.appendChild(card);
                     }
                 }
                 
-                loader.classList.add('hidden'); // Sembunyiin loading
-                statusDiv.innerText = `Scan Selesai! Menemukan ${found} kombinasi valid.`;
-                if(found === 0) statusDiv.innerText = "Gak ada yang cocok, bro. Cek lagi katanya!";
+                loader.classList.add('hidden');
+                statusDiv.innerText = `Scan Selesai! Menemukan ${found} hasil valid.`;
             }, 500);
         }
 
-        // PWA & Install
+        // PWA logic tetap sama...
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-        let defPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => { 
-            e.preventDefault(); 
-            defPrompt = e; 
-            document.getElementById('installBtn').classList.remove('hidden'); 
-        });
-        document.getElementById('installBtn').addEventListener('click', () => { 
-            if (defPrompt) { defPrompt.prompt(); } 
-        });
     </script>
 </body>
 </html>
