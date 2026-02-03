@@ -3,58 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minas Phrase Hunter v3</title>
+    <title>Minas Hunter - Grid Mode</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .word-input:focus { border-color: #eab308; box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2); }
-        body { -webkit-tap-highlight-color: transparent; }
+        input:focus { border-color: #eab308 !important; outline: none; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen font-sans">
-    <div class="max-w-xl mx-auto p-4">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-black text-yellow-400 italic leading-none">MINAS HUNTER</h1>
-                <p class="text-[10px] text-slate-500 font-mono mt-1">v3.0 - MULTI PHRASE MODE</p>
-            </div>
-            <button id="installBtn" class="hidden bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-full animate-bounce">INSTALL APP</button>
+<body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
+    <div class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-yellow-400">MINAS HUNTER <span class="text-[10px] bg-yellow-500 text-black px-1 rounded ml-1">3x4 MODE</span></h1>
+            <div id="installBtn" class="hidden text-[10px] bg-white text-black font-bold px-2 py-1 rounded-full cursor-pointer">INSTALL</div>
         </div>
 
-        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl mb-6">
-            <div class="flex gap-4 mb-4">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-2xl mb-6">
+            <div class="flex items-center gap-3 mb-4">
                 <div class="flex-1">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Mode Phrase</label>
-                    <div class="flex bg-slate-800 p-1 rounded-xl">
-                        <button onclick="setLength(12)" id="btn12" class="flex-1 py-2 text-xs font-bold rounded-lg bg-yellow-500 text-black transition">12 WORDS</button>
-                        <button onclick="setLength(24)" id="btn24" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 transition">24 WORDS</button>
-                    </div>
-                </div>
-                <div class="w-1/3">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">Clue Huruf</label>
-                    <input id="clue" type="text" maxlength="1" placeholder="?" class="w-full p-2 bg-slate-800 rounded-xl border border-slate-700 text-center font-bold text-yellow-400 uppercase outline-none">
+                    <label class="block text-[10px] text-slate-500 font-bold mb-1">CLUE AWALAN (C)</label>
+                    <input id="clue" type="text" value="c" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg text-yellow-400 font-bold text-center uppercase">
                 </div>
             </div>
 
-            <div id="wordGrid" class="grid grid-cols-3 gap-2 mb-4">
-                </div>
+            <div class="grid-container mb-6">
+                <script>
+                    for(let i=1; i<=12; i++) {
+                        document.write(`
+                            <div class="relative">
+                                <span class="absolute left-1.5 top-1 text-[8px] text-slate-500 font-bold">${i}</span>
+                                <input id="word-${i}" type="text" 
+                                class="w-full bg-slate-800 border border-slate-700 pt-4 pb-2 px-2 rounded-lg text-center text-xs text-white" 
+                                placeholder="${i === 1 ? '---' : ''}">
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
 
-            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl shadow-lg shadow-yellow-500/20 active:scale-95 transition">SCAN COMBINATIONS</button>
+            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-xl shadow-lg transition transform active:scale-95">
+                TEMBAK PHRASE
+            </button>
         </div>
 
-        <div id="status" class="mb-4 text-center text-[10px] text-slate-500 font-mono italic"></div>
+        <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4"></div>
         <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
-        let currentLength = 12;
-
-        // Generate input boxes
-        function generateInputs(len) {
-            const grid = document.getElementById('wordGrid');
-            grid.innerHTML = '';
-            for (let i = 1; i <= len; i++) {
-                grid.innerHTML += `
-                    <div class="relative
+        // Isi otomatis buat contoh (sesuai gambar elu)
+        const sample
