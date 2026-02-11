@@ -1,75 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phrase Hunter</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <title>EVM Multi-Chain Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        input:focus { border-color: #eab308 !important; outline: none; box-shadow: 0 0 10px rgba(234, 179, 8, 0.2); }
-        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .loader { border: 2px solid #1e293b; border-top: 2px solid #eab308; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .hidden { display: none; }
-        .word-box { position: relative; }
-        .word-num { position: absolute; left: 8px; top: 6px; font-size: 8px; color: #475569; font-weight: bold; }
-    </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
-    <div class="max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-black text-yellow-400 italic tracking-wider">PHRASE HUNTER</h1>
-            <button onclick="clearAll()" class="text-[10px] bg-red-600/20 text-red-500 border border-red-500/50 px-3 py-1 rounded-full font-bold">CLEAR ALL</button>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">EVM Portfolio Tracker</h1>
+        
+        <div class="flex gap-2 mb-8">
+            <input id="walletAddress" type="text" placeholder="Paste EVM Address (0x...)" 
+                class="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-500">
+            <button onclick="trackAssets()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded font-bold">Check</button>
         </div>
 
-        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-2xl mb-6">
-            <div class="mb-5">
-                <label class="block text-[10px] text-slate-500 font-bold mb-1 uppercase tracking-widest">Cari Clue Kata</label>
-                <div class="flex gap-2">
-                    <input id="clue" type="text" placeholder="Awalan" class="w-1/3 bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 font-bold text-center uppercase outline-none">
-                    <input id="searchClue" type="text" oninput="filterWords()" placeholder="Cari teka-teki kata..." class="w-2/3 bg-slate-800 border border-slate-700 p-2 rounded-xl text-yellow-400 text-sm outline-none">
-                </div>
-                <div id="wordSuggestions" class="flex flex-wrap gap-2 mt-2 max-h-24 overflow-y-auto"></div>
-            </div>
+        <div id="loading" class="hidden text-center my-4 text-yellow-500 italic">Lagi nyeken koin elu, sabar Bro...</div>
 
-            <div class="grid-container mb-6">
-                <div class="word-box"><span class="word-num">1</span><input id="word-1" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none" placeholder="TARGET"></div>
-                <div class="word-box"><span class="word-num">2</span><input id="word-2" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">3</span><input id="word-3" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">4</span><input id="word-4" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">5</span><input id="word-5" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">6</span><input id="word-6" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">7</span><input id="word-7" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">8</span><input id="word-8" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">9</span><input id="word-9" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">10</span><input id="word-10" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">11</span><input id="word-11" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-                <div class="word-box"><span class="word-num">12</span><input id="word-12" type="text" class="word-input w-full bg-slate-800 border border-slate-700 pt-5 pb-2 px-2 rounded-xl text-center text-[11px] outline-none"></div>
-            </div>
-
-            <button onclick="hunt()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">
-                TEMBAK SEKARANG
-            </button>
+        <div class="bg-gray-800 rounded-lg overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="p-4">Chain</th>
+                        <th class="p-4">Token</th>
+                        <th class="p-4">Balance</th>
+                        <th class="p-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTable">
+                    </tbody>
+            </table>
         </div>
-
-        <div id="loadingStatus" class="hidden text-center p-4 bg-slate-900/50 rounded-xl mb-4 border border-slate-800">
-            <div class="loader"></div>
-            <span class="text-xs text-yellow-500 font-bold animate-pulse font-mono uppercase">Sistem sedang bekerja meload data...</span>
-        </div>
-
-        <div id="status" class="text-center text-[10px] text-slate-500 italic mb-4 font-mono"></div>
-        <div id="results" class="space-y-3 pb-10"></div>
     </div>
 
     <script>
-        const wordlist = ethers.utils.wordlists.en;
+        async function trackAssets() {
+            const address = document.getElementById('walletAddress').value.trim();
+            const table = document.getElementById('resultTable');
+            const loader = document.getElementById('loading');
 
-        // FITUR AUTO PASTE
-        document.addEventListener('paste', function (e) {
-            if (e.target.classList.contains('word-input')) {
-                e.preventDefault();
-                let data = (e.clipboardData || window.clipboardData).getData('text');
-                let words = data.trim().split(/\s+/);
-                let startIdx = parseInt(e.target.id.split('-')
+            if (!address.startsWith('0x')) return alert('Address-nya salah tuh, Bro!');
+
+            table.innerHTML = '';
+            loader.classList.remove('hidden');
+
+            // List RPC Publik (Bisa ditambahin lagi)
+            const endpoints = [
+                { name: 'Ethereum', url: 'https://rpc.ankr.com/eth' },
+                { name: 'BSC', url: 'https://rpc.ankr.com/bsc' },
+                { name: 'Polygon', url: 'https://rpc.ankr.com/polygon' },
+                { name: 'Arbitrum', url: 'https://rpc.ankr.com/arbitrum' }
+            ];
+
+            // Pake API Ankr Public buat Multi-Chain
+            try {
+                const response = await fetch(`https://rpc.ankr.com/multichain`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        method: "ankr_getAccountBalance",
+                        params: { walletAddress: address },
+                        id: 1
+                    })
+                });
+
+                const data = await response.json();
+                const assets = data.result.assets;
+
+                loader.classList.add('hidden');
+
+                if (assets.length === 0) {
+                    table.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Koin nggak ketemu atau address kosong.</td></tr>';
+                    return;
+                }
+
+                assets.forEach(asset => {
+                    const row = `
+                        <tr class="border-b border-gray-700 hover:bg-gray-750">
+                            <td class="p-4 text-sm">${asset.blockchain}</td>
+                            <td class="p-4 font-bold">${asset.tokenSymbol}</td>
+                            <td class="p-4 text-green-400">${parseFloat(asset.balance).toFixed(4)}</td>
+                            <td class="p-4 text-blue-400 cursor-pointer hover:underline" onclick="copyText('${asset.tokenAddress}')">
+                                Copy Contract
+                            </td>
+                        </tr>
+                    `;
+                    table.innerHTML += row;
+                });
+
+            } catch (err) {
+                console.error(err);
+                loader.classList.add('hidden');
+                alert('Gagal narik data. Coba lagi nanti ya, Bro.');
+            }
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert('Contract copied: ' + text);
+        }
+    </script>
+</body>
+</html>
