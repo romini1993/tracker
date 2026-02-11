@@ -3,160 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVM Portfolio Tracker - Bro Minas</title>
+    <title>Multi-Chain Tracker - Bro Minas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-gradient { background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
-        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        body { background-color: #0b0f1a; font-family: 'Segoe UI', sans-serif; }
+        .glass { background: rgba(22, 29, 45, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .row-hover:hover { background-color: rgba(59, 130, 246, 0.1); }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col items-center py-12 px-4">
+<body class="text-slate-200 min-h-screen py-10 px-4">
 
-    <div class="w-full max-w-3xl">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-white mb-2">EVM Asset Tracker</h1>
-            <p class="text-slate-400">Paste address buat nyeken semua koin elu secara instan.</p>
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-10 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Multi-Chain Portfolio</h1>
+                <p class="text-slate-400">ETH, BSC, Polygon, Arbitrum, Optimism, Avalanche.</p>
+            </div>
+            <button onclick="copyAllData()" id="copyAllBtn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">
+                📋 Copy Semua Data
+            </button>
         </div>
 
-        <div class="glass p-6 rounded-2xl shadow-xl mb-8">
+        <div class="glass p-6 rounded-2xl shadow-2xl mb-8">
             <div class="flex flex-col md:flex-row gap-3">
-                <input id="walletAddress" type="text" 
-                    placeholder="0x... (Paste EVM Address)" 
-                    class="flex-1 bg-slate-900 border border-slate-700 p-4 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100">
-                <button onclick="trackAssets()" class="btn-gradient px-8 py-4 rounded-xl font-bold text-white">
-                    Scan Koin
+                <input id="walletAddress" type="text" placeholder="Paste Address EVM (0x...)" 
+                    class="flex-1 bg-slate-900 border border-slate-700 p-4 rounded-xl focus:outline-none focus:border-blue-500 text-slate-100 font-mono">
+                <button onclick="trackMultiChain()" class="bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-xl font-bold text-white transition-all">
+                    Scan Semua Network
                 </button>
             </div>
         </div>
 
-        <div id="loading" class="hidden text-center mb-6">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mr-3"></div>
-            <span class="text-blue-400 font-medium">Lagi nyari data, sabar ya Bro...</span>
+        <div id="loading" class="hidden text-center my-10">
+            <div class="inline-block animate-bounce text-blue-500 font-bold text-xl">Lagi nyari koin di semua jaringan...</div>
         </div>
 
         <div class="glass rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-800/50">
-                        <tr>
-                            <th class="p-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Network</th>
-                            <th class="p-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Token</th>
-                            <th class="p-4 text-xs font-semibold uppercase tracking-wider text-slate-400 text-right">Balance</th>
-                            <th class="p-4 text-xs font-semibold uppercase tracking-wider text-slate-400 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultTable" class="divide-y divide-slate-700/50">
-                        <tr>
-                            <td colspan="4" class="p-12 text-center text-slate-500 italic">Belum ada data. Masukin address dulu, Bro.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-800/80">
+                    <tr>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-400">Network</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-400">Token</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-400">Balance</th>
+                        <th class="p-4 text-xs font-bold uppercase text-slate-400 font-mono">Contract</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTable" class="divide-y divide-slate-800">
+                    <tr>
+                        <td colspan="4" class="p-12 text-center text-slate-500 italic">Address belum di-scan, Bro.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
-        <footer class="mt-8 text-center text-slate-500 text-sm">
-            Pokonya data diambil dari public explorer API. No wallet connection needed.
-        </footer>
     </div>
 
     <script>
-        async function trackAssets() {
+        let currentData = [];
+
+        async function trackMultiChain() {
             const address = document.getElementById('walletAddress').value.trim();
             const table = document.getElementById('resultTable');
             const loader = document.getElementById('loading');
+            const copyBtn = document.getElementById('copyAllBtn');
 
-            if (!address.startsWith('0x') || address.length < 42) {
-                alert('Address-nya salah tuh, coba cek lagi, Bro!');
-                return;
-            }
+            if (!address.startsWith('0x')) return alert('Address salah, Bro!');
 
-            // Reset UI
             table.innerHTML = '';
             loader.classList.remove('hidden');
+            copyBtn.classList.add('hidden');
+            currentData = [];
 
             try {
-                // Menggunakan Ethplorer Public API (Tanpa Key / FreeKey)
-                // Ini sangat stabil untuk mainnet Ethereum
-                const response = await fetch(`https://api.ethplorer.io/getAddressInfo/${address}?apiKey=freekey`);
-                
-                if (!response.ok) throw new Error('API Sibuk');
-                
-                const data = await response.json();
+                // Pake API Multichain dari Ankr (Public RPC)
+                const response = await fetch('https://rpc.ankr.com/multichain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        method: "ankr_getAccountBalance",
+                        params: { 
+                            walletAddress: address,
+                            // List network yang mau discan
+                            blockchain: ["eth", "bsc", "polygon", "arbitrum", "optimism", "avalanche"] 
+                        },
+                        id: 1
+                    })
+                });
+
+                const json = await response.json();
                 loader.classList.add('hidden');
 
-                let hasData = false;
+                if (json.result && json.result.assets.length > 0) {
+                    currentData = json.result.assets;
+                    copyBtn.classList.remove('hidden');
 
-                // 1. Cek Native ETH
-                if (data.ETH && data.ETH.balance > 0) {
-                    appendRow('Ethereum', 'ETH', data.ETH.balance, 'Native');
-                    hasData = true;
-                }
-
-                // 2. Cek List Token ERC-20
-                if (data.tokens && data.tokens.length > 0) {
-                    data.tokens.forEach(t => {
-                        const balance = t.balance / Math.pow(10, t.tokenInfo.decimals);
-                        if (balance > 0.000001) { // Filter saldo yang super kecil
-                            appendRow('Ethereum', t.tokenInfo.symbol, balance, t.tokenInfo.address);
-                            hasData = true;
-                        }
+                    currentData.forEach(asset => {
+                        const row = `
+                            <tr class="row-hover transition-colors">
+                                <td class="p-4 text-sm font-bold text-blue-400">${asset.blockchain.toUpperCase()}</td>
+                                <td class="p-4 text-white font-medium">${asset.tokenSymbol}</td>
+                                <td class="p-4 text-emerald-400 font-mono">${parseFloat(asset.balance).toFixed(6)}</td>
+                                <td class="p-4 text-slate-500 text-xs font-mono">${asset.tokenAddress === '0x0000000000000000000000000000000000000000' ? 'Native' : asset.tokenAddress}</td>
+                            </tr>
+                        `;
+                        table.innerHTML += row;
                     });
+                } else {
+                    table.innerHTML = '<tr><td colspan="4" class="p-12 text-center text-slate-500">Gak ada koin yang punya saldo, Bro.</td></tr>';
                 }
-
-                if (!hasData) {
-                    table.innerHTML = '<tr><td colspan="4" class="p-12 text-center text-slate-500">Kosong melompong, gak ada koin di sini.</td></tr>';
-                }
-
             } catch (err) {
-                console.error(err);
                 loader.classList.add('hidden');
-                alert('Gagal narik data. Coba beberapa saat lagi atau pake address lain, Bro.');
+                alert('Gagal narik data multi-chain. Coba lagi ya, Bro.');
             }
         }
 
-        function appendRow(chain, symbol, balance, contract) {
-            const table = document.getElementById('resultTable');
-            const formattedBalance = parseFloat(balance).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 6
+        // Fungsi buat COPY SEMUA DATA ke Clipboard
+        function copyAllData() {
+            if (currentData.length === 0) return;
+
+            let textData = "NETWORK | TOKEN | BALANCE | CONTRACT\n";
+            textData += "------------------------------------------\n";
+            
+            currentData.forEach(asset => {
+                textData += `${asset.blockchain.toUpperCase()} | ${asset.tokenSymbol} | ${asset.balance} | ${asset.tokenAddress}\n`;
             });
 
-            const row = `
-                <tr class="hover:bg-slate-700/30 transition-colors">
-                    <td class="p-4">
-                        <span class="bg-blue-900/40 text-blue-400 text-[10px] font-bold px-2 py-1 rounded uppercase">${chain}</span>
-                    </td>
-                    <td class="p-4">
-                        <div class="font-bold text-white">${symbol || '???'}</div>
-                    </td>
-                    <td class="p-4 text-right font-mono text-green-400 font-bold">
-                        ${formattedBalance}
-                    </td>
-                    <td class="p-4 text-center">
-                        ${contract !== 'Native' ? `
-                            <button onclick="copyText('${contract}')" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-md text-slate-300 transition-all">
-                                Copy CA
-                            </button>
-                        ` : '<span class="text-slate-600 text-xs">Native</span>'}
-                    </td>
-                </tr>
-            `;
-            table.innerHTML += row;
-        }
-
-        function copyText(text) {
-            navigator.clipboard.writeText(text);
-            // Simple toast notification
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = 'Copied!';
-            btn.classList.replace('bg-slate-700', 'bg-green-600');
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.replace('bg-green-600', 'bg-slate-700');
-            }, 1500);
+            navigator.clipboard.writeText(textData).then(() => {
+                alert('Pokonya semua data koin udah disalin ke clipboard, Bro!');
+            });
         }
     </script>
 </body>
