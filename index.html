@@ -2,13 +2,14 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Multi Chain Scanner No Aggregator</title>
+<title>Mini EVM Portfolio</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-black text-white p-8">
 
-<h1 class="text-2xl font-bold mb-6">Multi Chain Tracker</h1>
+<h1 class="text-2xl font-bold mb-6">Mini Portfolio RPC</h1>
 
 <input id="addr" placeholder="0x address"
 class="p-3 bg-gray-900 w-full mb-4">
@@ -17,7 +18,7 @@ class="p-3 bg-gray-900 w-full mb-4">
 SCAN
 </button>
 
-<table class="w-full mt-6 text-left">
+<table class="w-full mt-6">
 <thead>
 <tr>
 <th>Network</th>
@@ -31,157 +32,115 @@ SCAN
 
 <script>
 
-let hasilData = [];
-
+// ===== RPC ENDPOINT =====
 const CHAINS = [
 
 {
 name:"ETH",
-native:"ETH",
-api:`https://api.ethplorer.io/getAddressInfo/`
+rpc:"https://rpc.ankr.com/eth",
+tokens:[
+{
+symbol:"USDT",
+address:"0xdAC17F958D2ee523a2206206994597C13D831ec7",
+decimals:6
+}
+]
 },
 
 {
 name:"BSC",
-native:"BNB",
-api:`https://api.bscscan.com/api?module=account&action=tokentx&address=`
+rpc:"https://rpc.ankr.com/bsc",
+tokens:[
+{
+symbol:"USDT",
+address:"0x55d398326f99059fF775485246999027B3197955",
+decimals:18
+}
+]
 },
 
 {
 name:"POLYGON",
-native:"MATIC",
-api:`https://api.polygonscan.com/api?module=account&action=tokentx&address=`
+rpc:"https://rpc.ankr.com/polygon",
+tokens:[
+{
+symbol:"USDT",
+address:"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+decimals:6
+}
+]
 }
 
 ];
 
 
+// ===== ERC20 ABI =====
+const ERC20_ABI = [
+"function balanceOf(address) view returns (uint256)"
+];
+
+
+
 async function scan(){
 
 const address = document.getElementById("addr").value;
+const table = document.getElementById("hasil");
 
-hasilData = [];
-document.getElementById("hasil").innerHTML = "";
+table.innerHTML = "";
 
-await scanETH(address);
-await scanExplorer(address, CHAINS[1]);
-await scanExplorer(address, CHAINS[2]);
-
-render();
-
-}
-
-
-
-async function scanETH(address){
+for(const chain of CHAINS){
 
 try{
 
-const res = await fetch(`https://api.ethplorer.io/getAddressInfo/${address}?apiKey=freekey`);
-const data = await res.json();
+const provider = new ethers.providers.JsonRpcProvider(chain.rpc);
 
-if(data.ETH.balance > 0){
+// ===== Native =====
+const nativeBal = await provider.getBalance(address);
 
-hasilData.push({
-network:"ETH",
-token:"ETH",
-balance:data.ETH.balance
-});
+tambah(chain.name,"NATIVE",ethers.utils.formatEther(nativeBal));
 
-}
+// ===== Tokens =====
+for(const token of chain.tokens){
 
-if(data.tokens){
-
-data.tokens.forEach(t=>{
-
-const bal = t.balance / Math.pow(10,t.tokenInfo.decimals);
-
-if(bal > 0){
-
-hasilData.push({
-network:"ETH",
-token:t.tokenInfo.symbol,
-balance:bal
-});
-
-}
-
-});
-
-}
-
-}catch(e){console.log("ETH error")}
-
-}
-
-
-
-async function scanExplorer(address, chain){
-
-try{
-
-const res = await fetch(chain.api + address);
-const data = await res.json();
-
-const tokens = {};
-
-data.result.forEach(tx=>{
-
-tokens[tx.contractAddress] = {
-symbol:tx.tokenSymbol,
-decimals:tx.tokenDecimal
-};
-
-});
-
-for(const ca in tokens){
-
-// ambil balance tiap contract
-const balanceRes = await fetch(
-`https://api.allorigins.win/get?url=${encodeURIComponent(
-`https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${ca}&address=${address}`
-)}`
+const contract = new ethers.Contract(
+token.address,
+ERC20_ABI,
+provider
 );
 
-const parsed = await balanceRes.json();
-const balData = JSON.parse(parsed.contents);
+const bal = await contract.balanceOf(address);
 
-const bal = balData.result / Math.pow(10,tokens[ca].decimals);
+const formatted = bal / Math.pow(10,token.decimals);
 
-if(bal > 0){
-
-hasilData.push({
-network:chain.name,
-token:tokens[ca].symbol,
-balance:bal
-});
-
+if(formatted > 0){
+tambah(chain.name,token.symbol,formatted);
 }
 
 }
 
 }catch(e){
-console.log(chain.name,"error")
+console.log(chain.name,"error");
 }
 
 }
 
+}
 
 
-function render(){
 
-document.getElementById("hasil").innerHTML = hasilData.map(d=>`
+function tambah(net,sym,bal){
 
+document.getElementById("hasil").innerHTML += `
 <tr>
-<td>${d.network}</td>
-<td>${d.token}</td>
-<td>${d.balance.toFixed(4)}</td>
+<td>${net}</td>
+<td>${sym}</td>
+<td>${Number(bal).toFixed(4)}</td>
 </tr>
-
-`).join("");
+`;
 
 }
 
 </script>
+
 </body>
 </html>
