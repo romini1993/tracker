@@ -14,13 +14,13 @@
         html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100%; }
         .container { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; }
 
-        /* 1. Bagian Atas - Judul & Kurs (Scrollable / Bisa Ilang) */
+        /* 1. BAGIAN ATAS - Porto & Kurs (Bisa Hilang) */
         .top-flow { padding: 15px 15px 5px 15px; background: var(--bg); }
         .header { display: flex; justify-content: space-between; align-items: center; }
         .brand { font-size: 18px; font-weight: bold; color: var(--accent); }
         .kurs-info { font-size: 9px; color: var(--subtext); background: rgba(255,255,255,0.05); padding: 3px 6px; border-radius: 8px; border: 1px solid #334155; }
 
-        /* 2. Sticky Header (Ngunci di Atas) */
+        /* 2. STICKY HEADER - Saldo s/d Urutan (Ngunci di Atas) */
         .sticky-header { position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 5px 15px 10px 15px; }
         .summary-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--accent); text-align: center; }
         .summary-idr { font-size: 20px; font-weight: 800; display: block; }
@@ -35,21 +35,21 @@
         .control-row { display: flex; justify-content: space-between; gap: 6px; }
         .control-select { background: var(--card); color: white; border: 1px solid #334155; border-radius: 6px; font-size: 10px; padding: 6px; outline: none; cursor: pointer; flex: 1; }
 
-        /* 3. Area Daftar Koin (Main List) */
-        #main-list { padding: 10px 15px; min-height: 300px; }
+        /* 3. AREA LIST - Koin/Exchange */
+        #main-list { padding: 10px 15px; min-height: 200px; }
 
-        /* 4. Bagian Bawah - Backup (Scrollable / Ngumpet) */
-        .bottom-flow { padding: 10px 15px 20px 15px; border-top: 1px dashed #334155; margin-top: 10px; }
-        .backup-section { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
-        .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
-        .update-info { font-size: 9px; color: var(--subtext); text-align: center; opacity: 0.6; }
-
-        /* 5. Sticky Footer (Tambah Baru - Ngunci di Bawah) */
+        /* 4. STICKY FOOTER - Tambah Baru (Ngunci di Bawah) */
         .sticky-footer { position: sticky; bottom: 0; z-index: 100; background: var(--bg); padding: 10px 15px 15px 15px; border-top: 1px solid rgba(255,255,255,0.05); }
         .search-box { display: flex; gap: 6px; }
         .search-box input { flex: 1; background: var(--card); border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; }
         .add-btn { background: var(--accent); border: none; padding: 0 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; color: #0f172a; }
+
+        /* 5. BOTTOM FLOW - Backup (Ngikut di bawah Tambah Baru) */
+        .bottom-flow { padding: 5px 15px 25px 15px; background: var(--bg); }
+        .backup-section { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
+        .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
+        .update-info { font-size: 9px; color: var(--subtext); text-align: center; opacity: 0.6; }
 
         /* Style Item Koin (Tetap sama) */
         .coin-row { position: relative; margin-bottom: 8px; }
@@ -63,7 +63,6 @@
         .up { color: var(--up); }
         .down { color: var(--down); }
         
-        /* Modal & UI Details */
         .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; }
         .modal-btn-row { display: flex; gap: 10px; margin-top: 15px; }
@@ -123,6 +122,13 @@
 
     <div id="main-list"></div>
 
+    <div class="sticky-footer">
+        <div class="search-box">
+            <input type="text" id="global-add-input" placeholder="Tambah Baru..." onkeypress="if(event.key==='Enter') handleGlobalAdd()">
+            <button class="add-btn" onclick="handleGlobalAdd()">Tambah</button>
+        </div>
+    </div>
+
     <div class="bottom-flow">
         <div class="backup-section">
             <button class="backup-btn" onclick="exportData()">📤 Backup</button>
@@ -133,13 +139,6 @@
             <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
         </div>
         <div id="last-update" class="update-info">Update: --:--:--</div>
-    </div>
-
-    <div class="sticky-footer">
-        <div class="search-box">
-            <input type="text" id="global-add-input" placeholder="Tambah Baru..." onkeypress="if(event.key==='Enter') handleGlobalAdd()">
-            <button class="add-btn" onclick="handleGlobalAdd()">Tambah</button>
-        </div>
     </div>
 </div>
 
@@ -156,7 +155,7 @@
 <div id="toast-msg"></div>
 
 <script>
-    // LOGIC & DATA (Tidak Diubah Sedikitpun)
+    // SEMUA LOGIC & DATA TETAP SAMA (TIDAK ADA YANG DIUBAH)
     let usdToIdr = 16000;
     let prices = {};
     let changes = {};
@@ -234,54 +233,35 @@
     function switchTab(tab) { currentTab = tab; expandedItem = null; document.getElementById('tab-ex').classList.toggle('active', tab === 'exchange'); document.getElementById('tab-coin').classList.toggle('active', tab === 'coin'); renderList(); }
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
 
-    async function fetchKurs() {
-        try {
-            const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR');
-            const d = await r.json();
-            if(d.price) { usdToIdr = parseFloat(d.price); document.getElementById('kurs-live').innerText = `USD/IDR: ${Math.round(usdToIdr).toLocaleString('id-ID')}`; updatePricesOnly(); }
-        } catch(e) {}
-    }
-
+    async function fetchKurs() { try { const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR'); const d = await r.json(); if(d.price) { usdToIdr = parseFloat(d.price); document.getElementById('kurs-live').innerText = `USD/IDR: ${Math.round(usdToIdr).toLocaleString('id-ID')}`; updatePricesOnly(); } } catch(e) {} }
     async function fetchCoinMap() { try { const r = await fetch('https://api.coingecko.com/api/v3/coins/list'); (await r.json()).forEach(c => { coinMapCG[c.symbol.toUpperCase()] = c.id; }); } catch(e) {} }
-
     async function fetchAll() {
         if(isFetching) return; isFetching = true;
         let remainingCoins = watchlist.filter(s => !['IDR','USDT','USDC','USD','BUSD'].includes(s));
-        
         try {
             const bybitRes = await fetch('https://api.bybit.com/v5/market/tickers?category=spot');
             const bybitData = await bybitRes.json();
             if(bybitData.result?.list) {
                 bybitData.result.list.forEach(item => {
                     let sym = item.symbol.replace('USDT','');
-                    if(remainingCoins.includes(sym)) {
-                        prices[sym] = parseFloat(item.lastPrice);
-                        changes[sym] = (parseFloat(item.price24hPcnt) * 100).toFixed(2);
-                        remainingCoins = remainingCoins.filter(c => c !== sym);
-                    }
+                    if(remainingCoins.includes(sym)) { prices[sym] = parseFloat(item.lastPrice); changes[sym] = (parseFloat(item.price24hPcnt) * 100).toFixed(2); remainingCoins = remainingCoins.filter(c => c !== sym); }
                 });
             }
         } catch(e) {}
-
         for (const s of remainingCoins) {
             if (coinMapCG[s]) {
                 try {
                     const rcg = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinMapCG[s]}&vs_currencies=usd&include_24hr_change=true`);
                     const dcg = await rcg.json();
-                    if(dcg[coinMapCG[s]]) {
-                        prices[s] = dcg[coinMapCG[s]].usd;
-                        changes[s] = dcg[coinMapCG[s]].usd_24h_change ? dcg[coinMapCG[s]].usd_24h_change.toFixed(2) : "0.00";
-                    }
+                    if(dcg[coinMapCG[s]]) { prices[s] = dcg[coinMapCG[s]].usd; changes[s] = dcg[coinMapCG[s]].usd_24h_change ? dcg[coinMapCG[s]].usd_24h_change.toFixed(2) : "0.00"; }
                 } catch(e) {}
             }
         }
-
         watchlist.forEach(s => {
             if(s === 'IDR') { prices[s] = 1/usdToIdr; changes[s] = "0.00"; }
             else if(['USDT','USDC','USD','BUSD'].includes(s)) { prices[s] = 1; changes[s] = "0.00"; }
             else if(!prices[s]) { prices[s] = 0; changes[s] = "0.00"; }
         });
-
         const now = new Date();
         document.getElementById('last-update').innerText = `Update: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         updatePricesOnly(); isFetching = false;
@@ -293,13 +273,7 @@
         if (currentTab === 'exchange') {
             allExchanges.forEach(ex => {
                 let exTotalUsd = 0;
-                watchlist.forEach(sym => { 
-                    if (coinSources[sym]?.includes(ex)) {
-                        const data = balances[sym]?.[ex];
-                        let balTotal = (typeof data === 'object') ? (parseFloat(data.amount||0) + parseFloat(data.staking||0)) : parseFloat(data||0);
-                        exTotalUsd += (balTotal * (prices[sym] || 0)); 
-                    }
-                });
+                watchlist.forEach(sym => { if (coinSources[sym]?.includes(ex)) { const data = balances[sym]?.[ex]; let balTotal = (typeof data === 'object') ? (parseFloat(data.amount||0) + parseFloat(data.staking||0)) : parseFloat(data||0); exTotalUsd += (balTotal * (prices[sym] || 0)); } });
                 totalAllUsd += exTotalUsd;
                 const el = document.getElementById(`val-ex-${ex}`);
                 if (el) el.innerText = (currencyView === 'IDR') ? `Rp ${(exTotalUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${exTotalUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
@@ -321,51 +295,17 @@
         document.getElementById('total-all-usd').innerText = `$${totalAllUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     }
 
-    function getCoinTotal(sym) { 
-        let t = 0; 
-        (coinSources[sym] || []).forEach(src => {
-            const data = balances[sym]?.[src];
-            if (typeof data === 'object') { t += parseFloat(data.amount || 0) + parseFloat(data.staking || 0); } 
-            else { t += parseFloat(data || 0); }
-        }); 
-        return t; 
-    }
-
-    function handleLogoError(img, sym) {
-        if(sym === 'IDR') { img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`; return; }
-        const retry = parseInt(img.getAttribute('data-retry') || "0");
-        const srcArr = [`https://coinicons-api.vercel.app/api/icon/${sym.toLowerCase()}`, `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`];
-        if (retry < srcArr.length) { img.setAttribute('data-retry', retry + 1); img.src = srcArr[retry]; } 
-        else { img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`; }
-    }
-
+    function getCoinTotal(sym) { let t = 0; (coinSources[sym] || []).forEach(src => { const data = balances[sym]?.[src]; if (typeof data === 'object') { t += parseFloat(data.amount || 0) + parseFloat(data.staking || 0); } else { t += parseFloat(data || 0); } }); return t; }
+    function handleLogoError(img, sym) { if(sym === 'IDR') { img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`; return; } const retry = parseInt(img.getAttribute('data-retry') || "0"); const srcArr = [`https://coinicons-api.vercel.app/api/icon/${sym.toLowerCase()}`, `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`]; if (retry < srcArr.length) { img.setAttribute('data-retry', retry + 1); img.src = srcArr[retry]; } else { img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`; } }
     function handleTouchStart(e, id, type) { isMoving = false; isLongPressActive = false; touchStartY = e.touches ? e.touches[0].pageY : e.pageY; longPressTimer = setTimeout(() => { if(!isMoving) { isLongPressActive = true; openDeleteModal(id, type); } }, 800); }
     function handleMouseDown(e, id, type) { if (e.button !== 0) return; isMoving = false; isLongPressActive = false; longPressTimer = setTimeout(() => { isLongPressActive = true; openDeleteModal(id, type); }, 800); }
     function handleMouseUp() { clearTimeout(longPressTimer); }
     function handleTouchMove(e) { if(e.touches && Math.abs(e.touches[0].pageY - touchStartY) > 10) { isMoving = true; clearTimeout(longPressTimer); } }
     function handleTouchEnd() { clearTimeout(longPressTimer); }
     function handleSimpleClick(id) { setTimeout(() => { if(!isLongPressActive) { toggleDetail(id); } }, 50); }
-
-    function openDeleteModal(id, type) {
-        const modal = document.getElementById('delete-modal');
-        const msg = document.getElementById('modal-msg');
-        const btn = document.getElementById('confirm-delete-btn');
-        msg.innerText = `Hapus ${id}?`;
-        modal.style.display = 'flex';
-        btn.onclick = () => { if(type === 'coin') removeCoin(id); else removeExchange(id); closeDeleteModal(); };
-    }
+    function openDeleteModal(id, type) { const modal = document.getElementById('delete-modal'); const msg = document.getElementById('modal-msg'); const btn = document.getElementById('confirm-delete-btn'); msg.innerText = `Hapus ${id}?`; modal.style.display = 'flex'; btn.onclick = () => { if(type === 'coin') removeCoin(id); else removeExchange(id); closeDeleteModal(); }; }
     function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
-    function toggleDetail(id) {
-        const target = document.getElementById(`det-${id}`);
-        if (!target) return;
-        const isCurrentlyOpen = target.style.display === 'block';
-        if (expandedItem && expandedItem !== id) {
-            const oldEl = document.getElementById(`det-${expandedItem}`);
-            if (oldEl) oldEl.style.display = 'none';
-        }
-        if (isCurrentlyOpen) { target.style.display = 'none'; expandedItem = null; } 
-        else { target.style.display = 'block'; expandedItem = id; }
-    }
+    function toggleDetail(id) { const target = document.getElementById(`det-${id}`); if (!target) return; const isCurrentlyOpen = target.style.display === 'block'; if (expandedItem && expandedItem !== id) { const oldEl = document.getElementById(`det-${expandedItem}`); if (oldEl) oldEl.style.display = 'none'; } if (isCurrentlyOpen) { target.style.display = 'none'; expandedItem = null; } else { target.style.display = 'block'; expandedItem = id; } }
 
     function renderList() {
         const list = document.getElementById('main-list');
@@ -373,20 +313,11 @@
         const sortType = document.getElementById('sort-order').value;
         let html = "";
         if (currentTab === 'exchange') {
-            let exArr = allExchanges.map(ex => {
-                let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) {
-                    const data = balances[s]?.[ex];
-                    let b = (typeof data === 'object') ? (parseFloat(data.amount||0) + parseFloat(data.staking||0)) : parseFloat(data||0);
-                    t += (b * (prices[s] || 0));
-                }});
-                return { name: ex, totalValue: t };
-            }).filter(ex => ex.name.includes(query));
+            let exArr = allExchanges.map(ex => { let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const data = balances[s]?.[ex]; let b = (typeof data === 'object') ? (parseFloat(data.amount||0) + parseFloat(data.staking||0)) : parseFloat(data||0); t += (b * (prices[s] || 0)); }}); return { name: ex, totalValue: t }; }).filter(ex => ex.name.includes(query));
             if (sortType === 'name') exArr.sort((a, b) => a.name.localeCompare(b.name));
             else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
-            
             exArr.forEach(ex => {
-                let brand = ex.name.split(' ')[0];
-                const logo = exchangeLogos[brand] || "";
+                let brand = ex.name.split(' ')[0]; const logo = exchangeLogos[brand] || "";
                 html += `<div class="coin-row"><div class="coin-card" onclick="handleSimpleClick('${ex.name}')" ontouchstart="handleTouchStart(event, '${ex.name}','ex')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd()" onmousedown="handleMouseDown(event, '${ex.name}','ex')" onmouseup="handleMouseUp()"><div class="logo-wrapper">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${ex.name}</span></div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${watchlist.filter(s => coinSources[s]?.includes(ex.name)).map(s => {
                     const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
                     return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:18px; height:18px; border:none"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="removeCoinFromExchange('${s}', '${ex.name}')">×</span></div>`;
