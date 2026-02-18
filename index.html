@@ -237,15 +237,23 @@
     function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
 
     function renamePopup(oldVal, type) {
-        const modal = document.getElementById('custom-modal');
-        const input = document.getElementById('modal-input-field');
-        document.getElementById('modal-title').innerText = "RENAME " + oldVal;
-        input.style.display = 'block'; input.value = oldVal;
-        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
-        document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
-        modal.classList.add('active');
-        setTimeout(() => { input.focus(); input.setSelectionRange(0, input.value.length); }, 250);
-    }
+    const modal = document.getElementById('custom-modal');
+    const input = document.getElementById('modal-input-field');
+    document.getElementById('modal-title').innerText = "RENAME " + oldVal;
+    input.style.display = 'block'; 
+    input.value = oldVal;
+    document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+    document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
+    modal.classList.add('active');
+    
+    // Trik kursor di belakang: Focus dulu, baru timpa value-nya
+    setTimeout(() => { 
+        input.focus();
+        let tmpStr = input.value;
+        input.value = '';
+        input.value = tmpStr;
+    }, 250);
+}
 
     function renameProcess(oldVal, newVal, type) {
         if (newVal && newVal.trim() !== "" && newVal.toUpperCase() !== oldVal) {
