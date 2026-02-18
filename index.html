@@ -34,40 +34,11 @@
 
         #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* MODIFIKASI LAYOUT BAWAH (STICKY & ROLL) */
-        .bottom-nav-container {
-            position: sticky;
-            bottom: 0;
-            width: 100%;
-            z-index: 1000;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-        }
-
-        #add-bar-fixed {
-            background: var(--bg);
-            padding: 10px 15px;
-            border-top: 1px solid #334155;
-            z-index: 1002; /* Di depan backup */
-        }
-
-        #backup-scroll-area {
-            background: var(--bg);
-            padding: 0 15px 20px 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 250px;
-            overflow: hidden;
-            opacity: 1;
-        }
-
-        /* Class buat ngumpetin backup pas scroll */
-        .hide-backup {
-            max-height: 0 !important;
-            padding-bottom: 0 !important;
-            opacity: 0;
-            transform: translateY(20px);
-        }
+        /* AREA BAWAH STICKY & ROLL */
+        .bottom-nav-container { position: sticky; bottom: 0; width: 100%; z-index: 1000; background: var(--bg); display: flex; flex-direction: column; }
+        #add-bar-fixed { background: var(--bg); padding: 10px 15px; border-top: 1px solid #334155; z-index: 1002; }
+        #backup-scroll-area { background: var(--bg); padding: 0 15px 20px 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 250px; overflow: hidden; opacity: 1; }
+        .hide-backup { max-height: 0 !important; padding-bottom: 0 !important; opacity: 0; transform: translateY(20px); }
 
         .search-box { display: flex; gap: 6px; }
         .search-box input { flex: 1; background: var(--card); border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; }
@@ -77,9 +48,12 @@
         .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
         .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
 
-        /* STYLE ASLI (LOCK - JANGAN DIUBAH) */
+        /* STYLE KARTU & INPUT (DIKUNCI) */
         .coin-row { position: relative; margin-bottom: 8px; }
-        .coin-card { background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; }
+        .coin-card { 
+            background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; 
+            user-select: none; -webkit-user-select: none; /* Cegah blok teks saat tahan lama */
+        }
         .logo-wrapper { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid #475569; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; }
         .logo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .logo-initial { width: 100%; height: 100%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; text-transform: uppercase; border: 1px solid #475569; border-radius: 50%; }
@@ -93,6 +67,7 @@
         .source-row { display: flex; align-items: center; margin-bottom: 6px; gap: 6px; }
         .source-label { font-size: 13px; font-weight: bold; color: var(--text); min-width: 70px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
         
+        /* UKURAN INPUT 225px TETAP */
         .input-wrapper { display: flex; gap: 6px; flex: 0 0 225px; justify-content: flex-end; margin-left: auto; } 
         .source-input { flex: 1; width: 100%; background: #000; border: 1px solid #475569; color: #fff; border-radius: 5px; padding: 7px 8px; font-size: 13px; outline: none; }
         .del-src { color: white; font-size: 18px; cursor: pointer; margin-left: 6px; opacity: 0.7; }
@@ -164,24 +139,41 @@
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-    // LOGIC SCROLL BERLAWANAN
+    // LOGIC SCROLL & HOLD DELETE
     let lastScrollY = window.scrollY;
+    let holdTimer;
+
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const backupArea = document.getElementById("backup-scroll-area");
-        
-        // Geser ke bawah (jempol ke atas) -> Backup ngumpet
         if (currentScrollY > lastScrollY && currentScrollY > 10) {
             backupArea.classList.add("hide-backup");
-        } 
-        // Geser ke atas (jempol ke bawah) -> Backup muncul
-        else if (currentScrollY < lastScrollY) {
+        } else if (currentScrollY < lastScrollY) {
             backupArea.classList.remove("hide-backup");
         }
         lastScrollY = currentScrollY;
     });
 
-    // --- JANGAN DIUBAH (LOGIC ASLI) ---
+    function startHold(id, type) {
+        holdTimer = setTimeout(() => {
+            if (type === 'exchange') {
+                if (confirm(`Hapus Exchange ${id} dan semua datanya?`)) {
+                    allExchanges = allExchanges.filter(ex => ex !== id);
+                    saveAll(); renderList();
+                }
+            } else {
+                if (confirm(`Hapus Koin ${id} dari watchlist?`)) {
+                    watchlist = watchlist.filter(s => s !== id);
+                    delete balances[id]; delete coinSources[id];
+                    saveAll(); renderList();
+                }
+            }
+        }, 600);
+    }
+
+    function clearHold() { clearTimeout(holdTimer); }
+
+    // --- DATA & LOGIC ASLI (KUNCI TOTAL) ---
     let usdToIdr = 16000;
     let prices = {}; let changes = {}; let coinMapCG = {};
     let currentTab = 'exchange'; let isFetching = false;
@@ -272,7 +264,7 @@
             exArr.forEach(ex => {
                 let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
                 let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold('${ex.name}','exchange')" onmouseup="clearHold()" ontouchstart="startHold('${ex.name}','exchange')" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
                     const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
                     return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="removeCoinFromExchange('${s}', '${ex.name}')">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')"><button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button></div></div></div>`;
@@ -283,7 +275,7 @@
             else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
             filtered.forEach(s => {
                 let subSrc = [...(coinSources[s]||[])];
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')"><div class="logo-wrapper"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details">${subSrc.map(src => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold('${s}','coin')" onmouseup="clearHold()" ontouchstart="startHold('${s}','coin')" ontouchend="clearHold()"><div class="logo-wrapper"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details">${subSrc.map(src => {
                     const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:'', staking:''};
                     return `<div class="source-row"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${src}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${src}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="removeSource('${s}', '${src}')">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Nama Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')"><button class="new-source-btn" onclick="addCustomSource('${s}')">+</button></div></div></div>`;
