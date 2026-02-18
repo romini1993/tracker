@@ -349,7 +349,7 @@
                 const valUsd = getCoinTotal(sym) * (prices[sym] || 0); totalAllUsd += valUsd;
                 const elVal = document.getElementById(`val-coin-${sym}`); const elPrice = document.getElementById(`price-coin-${sym}`); const elChange = document.getElementById(`change-coin-${sym}`);
                 if (elVal) elVal.innerText = (currencyView === 'IDR') ? `Rp ${(valUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${valUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                if (elPrice) elPrice.innerText = sym === 'IDR' ? 'STABLE IDR' : '$' + (prices[sym]||0).toLocaleString(undefined, {minimumFractionDigits: (prices[sym]||0) < 1 ? 4 : 2});
+                if (elPrice) elPrice.innerText = sym === 'IDR' ? 'Stable IDR' : '$' + (prices[sym]||0).toLocaleString(undefined, {minimumFractionDigits: (prices[sym]||0) < 1 ? 4 : 2});
                 if (elChange) { const c = changes[sym] || "0.00"; elChange.innerText = `${parseFloat(c) >= 0 ? '+' : ''}${c}%`; elChange.className = `change-pct ${parseFloat(c) >= 0 ? 'up' : 'down'}`; }
             });
         }
