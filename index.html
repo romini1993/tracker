@@ -10,7 +10,7 @@
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --subtext: #94a3b8; --up: #4ade80; --down: #f87171; --gray-btn: #334155; --red-muted: #991b1b; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100%; overflow-x: hidden; }
+        html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100%; }
         .container { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
 
         .top-flow { padding: 15px 15px 5px 15px; background: var(--bg); }
@@ -34,20 +34,18 @@
 
         #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* POPUP CENTER & KEYBOARD ADJUST */
+        /* CUSTOM POPUP CENTER & HORIZONTAL BTNS */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { width: 100%; max-width: 340px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: all 0.2s ease; }
+        .modal-content { width: 100%; max-width: 340px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
-        /* Naik dikit pas keyboard muncul */
-        @media (max-height: 500px) { .modal-content { transform: translateY(-25%) scale(1) !important; } }
+        /* Geser popup ke atas pas keyboard muncul di mobile */
+        @media screen and (max-height: 550px) { .modal-content { transform: translateY(-20%) scale(1) !important; } }
 
-        .modal-title { font-weight: bold; font-size: 13px; text-align: center; margin-bottom: 15px; color: var(--text); text-transform: uppercase; }
+        .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 15px; color: var(--text); text-transform: uppercase; }
         .modal-input { width: 100%; background: #000; border: 1px solid var(--accent); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 15px; outline: none; font-size: 14px; text-align: center; }
-        
-        /* TOMBOL HORIZONTAL */
-        .modal-btns { display: flex; flex-direction: row; gap: 8px; width: 100%; }
+        .modal-btns { display: flex; gap: 8px; justify-content: center; }
         .modal-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
         
         .btn-delete { background: var(--red-muted); color: white; }
@@ -69,7 +67,7 @@
         .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
         .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
 
-        /* UKURAN INPUT 225px TETAP */
+        /* KOTAK INPUT TETAP 225px */
         .coin-row { position: relative; margin-bottom: 8px; }
         .coin-card { background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; user-select: none; -webkit-user-select: none; }
         .logo-wrapper { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid #475569; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; }
@@ -199,24 +197,18 @@
         document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-backup-ok">OKE</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
         document.getElementById('btn-backup-ok').onclick = () => { exportData(input.value); closeModal(); };
         modal.classList.add('active');
-        setTimeout(() => input.focus(), 200);
+        setTimeout(() => input.focus(), 250);
     }
 
-    // LOGIC SCROLL & DEAD ZONE ANTI-GETER
+    // SCROLL LOGIC (BALIK KE YANG LU SUKA)
     let lastScrollY = window.scrollY;
     let holdTimer, startX, startY;
 
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const b = document.getElementById("backup-scroll-area");
-        const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 15;
-
-        if (isAtBottom) {
-            b.classList.add("hide-backup"); // Paksa ngumpet pas mentok bawah
-        } else {
-            if (currentScrollY > lastScrollY && currentScrollY > 10) b.classList.add("hide-backup");
-            else if (currentScrollY < lastScrollY) b.classList.remove("hide-backup");
-        }
+        if (currentScrollY > lastScrollY && currentScrollY > 20) b.classList.add("hide-backup");
+        else if (currentScrollY < lastScrollY) b.classList.remove("hide-backup");
         lastScrollY = currentScrollY;
     });
 
@@ -228,7 +220,7 @@
             else confirmModal(`HAPUS ${id}?`, 'delete', () => { watchlist = watchlist.filter(s => s !== id); delete balances[id]; delete coinSources[id]; saveAll(); renderList(); }, () => renamePopup(id, 'coin'));
         }, 700);
     }
-    function moveHold(event) { if (!holdTimer) return; const touch = event.touches ? event.touches[0] : event; if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) clearHold(); }
+    function moveHold(event) { if (!holdTimer) return; const touch = event.touches ? event.touches[0] : event; if (Math.abs(touch.clientX - startX) > 15 || Math.abs(touch.clientY - startY) > 15) clearHold(); }
     function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
 
     function renamePopup(oldVal, type) {
@@ -239,7 +231,7 @@
         document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
         document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
         modal.classList.add('active');
-        setTimeout(() => { input.focus(); input.setSelectionRange(0, input.value.length); }, 200);
+        setTimeout(() => { input.focus(); input.setSelectionRange(0, input.value.length); }, 250);
     }
 
     function renameProcess(oldVal, newVal, type) {
@@ -258,7 +250,7 @@
         }
     }
 
-    // --- DATA & LOGIC ASLI (DIKUNCI) ---
+    // --- DATA & LOGIC ASLI (KUNCI MATI) ---
     let usdToIdr = 16000;
     let prices = {}; let changes = {}; let coinMapCG = {};
     let currentTab = 'exchange'; let isFetching = false;
