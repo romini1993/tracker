@@ -34,13 +34,11 @@
 
         #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* CUSTOM POPUP CENTER & HORIZONTAL BTNS */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { width: 100%; max-width: 340px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
-        /* Geser popup ke atas pas keyboard muncul di mobile */
         @media screen and (max-height: 550px) { .modal-content { transform: translateY(-20%) scale(1) !important; } }
 
         .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 15px; color: var(--text); text-transform: uppercase; }
@@ -53,7 +51,6 @@
         .btn-ok { background: var(--accent); color: #0f172a; }
         .btn-cancel { background: var(--gray-btn); color: white; }
 
-        /* AREA BAWAH STICKY & ROLL */
         .bottom-nav-container { position: sticky; bottom: 0; width: 100%; z-index: 1000; background: var(--bg); display: flex; flex-direction: column; }
         #add-bar-fixed { background: var(--bg); padding: 10px 15px; border-top: 1px solid #334155; z-index: 1002; }
         #backup-scroll-area { background: var(--bg); padding: 0 15px 20px 15px; transition: all 0.3s ease; max-height: 250px; overflow: hidden; opacity: 1; }
@@ -67,7 +64,6 @@
         .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
         .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
 
-        /* KOTAK INPUT TETAP 225px */
         .coin-row { position: relative; margin-bottom: 8px; }
         .coin-card { background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; user-select: none; -webkit-user-select: none; }
         .logo-wrapper { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid #475569; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; }
@@ -162,8 +158,7 @@
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-   // --- POPUP LOGIC (REPLACEMENT) ---
-
+    // --- POPUP LOGIC ---
     function closeModal() { 
         document.getElementById('custom-modal').classList.remove('active'); 
         document.getElementById('modal-input-field').style.display='none'; 
@@ -191,7 +186,6 @@
         modal.classList.add('active');
     }
 
-    // Fungsi Backup - Kursor Otomatis di Belakang
     function openBackupPopup() {
         const now = new Date();
         const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
@@ -212,7 +206,6 @@
         }, 250);
     }
 
-    // Fungsi Rename - Kursor Otomatis di Belakang
     function renamePopup(oldVal, type) {
         const modal = document.getElementById('custom-modal');
         const input = document.getElementById('modal-input-field');
@@ -230,78 +223,53 @@
             input.value = val;
         }, 250);
     }
-// --- REPLACE BAGIAN INI BRO ---
-    let lastScrollY = window.scrollY;
-    let holdTimer, startX, startY;
 
-    // Logic Scroll Baru: Anti-Geter di Mentok Bawah
+    // --- SCROLL LOGIC ---
+    let lastScrollY = window.scrollY;
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const b = document.getElementById("backup-scroll-area");
-        
-        // Cek posisi mentok bawah (dikasih toleransi 50px biar gak bounce/geter)
         const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 50);
 
-        if (isAtBottom) {
-            // Pas mau mentok bawah, paksa ngumpet biar gak bentrok sama efek bounce browser
-            b.classList.add("hide-backup");
-        } else {
-            // Logic scroll normal: turun ngumpet, naik muncul
-            if (currentScrollY > lastScrollY && currentScrollY > 20) {
-                b.classList.add("hide-backup");
-            } else if (currentScrollY < lastScrollY) {
-                b.classList.remove("hide-backup");
-            }
+        if (isAtBottom) b.classList.add("hide-backup");
+        else {
+            if (currentScrollY > lastScrollY && currentScrollY > 20) b.classList.add("hide-backup");
+            else if (currentScrollY < lastScrollY) b.classList.remove("hide-backup");
         }
         lastScrollY = currentScrollY;
     }, { passive: true });
-    function startHold(event, id, type) {
-        const touch = event.touches ? event.touches[0] : event;
-        startX = touch.clientX; startY = touch.clientY;
-        holdTimer = setTimeout(() => {
-            if (type === 'exchange') confirmModal(`HAPUS ${id}?`, 'delete', () => { allExchanges = allExchanges.filter(ex => ex !== id); saveAll(); renderList(); }, () => renamePopup(id, 'exchange'));
-            else confirmModal(`HAPUS ${id}?`, 'delete', () => { watchlist = watchlist.filter(s => s !== id); delete balances[id]; delete coinSources[id]; saveAll(); renderList(); }, () => renamePopup(id, 'coin'));
-        }, 700);
-    }
-    function moveHold(event) { if (!holdTimer) return; const touch = event.touches ? event.touches[0] : event; if (Math.abs(touch.clientX - startX) > 15 || Math.abs(touch.clientY - startY) > 15) clearHold(); }
-    function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
 
-    function renamePopup(oldVal, type) {
-    const modal = document.getElementById('custom-modal');
-    const input = document.getElementById('modal-input-field');
-    document.getElementById('modal-title').innerText = "RENAME " + oldVal;
-    input.style.display = 'block'; 
-    input.value = oldVal;
-    document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
-    document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
-    modal.classList.add('active');
-    
-    // Trik kursor di belakang: Focus dulu, baru timpa value-nya
-    setTimeout(() => { 
-        input.focus();
-        let tmpStr = input.value;
-        input.value = '';
-        input.value = tmpStr;
-    }, 250);
-}
+    // --- LOGO HIERARCHY (FITUR BARU) ---
+    function handleLogoError(img, sym) {
+        if (sym === 'IDR') {
+            img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`;
+            return;
+        }
+        const retry = parseInt(img.getAttribute('data-retry') || "0");
+        const s = sym.toLowerCase();
+        const S = sym.toUpperCase();
 
-    function renameProcess(oldVal, newVal, type) {
-        if (newVal && newVal.trim() !== "" && newVal.toUpperCase() !== oldVal) {
-            const upper = newVal.toUpperCase().trim();
-            if (type === 'exchange') {
-                allExchanges = allExchanges.map(ex => ex === oldVal ? upper : ex);
-                for (let c in coinSources) coinSources[c] = coinSources[c].map(src => src === oldVal ? upper : src);
-                for (let c in balances) { if (balances[c][oldVal]) { balances[c][upper] = balances[c][oldVal]; delete balances[c][oldVal]; } }
-            } else {
-                watchlist = watchlist.map(s => s === oldVal ? upper : s);
-                if (coinSources[oldVal]) { coinSources[upper] = coinSources[oldVal]; delete coinSources[oldVal]; }
-                if (balances[oldVal]) { balances[upper] = balances[oldVal]; delete balances[oldVal]; }
-            }
-            saveAll(); renderList();
+        // Urutan pintu sesuai request
+        const sources = [
+            `https://bin.bnbstatic.com/static/assets/logos/${S}.png`,           // 1. Binance
+            `https://s1.bycsi.com/bybit/assets/tokens/colors/${s}.png`,        // 2. Bybit
+            `https://indodax.com/v2/logo/png/color/${s}.png`,                  // 3. Indodax
+            `https://mexc-img.oss-cn-hangzhou.aliyuncs.com/static/token/${S}.png`, // 4. MEXC
+            `https://gimg2.gateimg.com/coin_icon/${S}.png`,                    // 5. Gate.io
+            `https://static.okx.com/cdn/oksupport/asset/currency/icon/${s}.png`, // 6. OKX
+            `https://coinicons-api.vercel.app/api/icon/${s}`,                  // 7. CryptoIcon
+            `https://assets.coincap.io/assets/icons/${s}@2x.png`               // 8. CoinCap
+        ];
+
+        if (retry < sources.length) {
+            img.setAttribute('data-retry', retry + 1);
+            img.src = sources[retry];
+        } else {
+            img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`;
         }
     }
 
-    // --- DATA & LOGIC ASLI (KUNCI MATI) ---
+    // --- DATA & STATE ---
     let usdToIdr = 16000;
     let prices = {}; let changes = {}; let coinMapCG = {};
     let currentTab = 'exchange'; let isFetching = false;
@@ -310,8 +278,9 @@
     let coinSources = JSON.parse(localStorage.getItem('my_coin_sources') || '{}');
     let allExchanges = JSON.parse(localStorage.getItem('my_exchanges_v2') || '[]');
     let expandedItem = null; let currentMode = 'restore';
+    let holdTimer, startX, startY;
 
-    const exchangeLogos = { "BINANCE": "https://assets.coingecko.com/markets/images/52/standard/binance.jpg?1706864274", "BYBIT": "https://assets.coingecko.com/markets/images/698/standard/bybit_spot.png?1706864649", "OKX": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/294.png", "GATE": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/302.png", "TOKOCRYPTO": "https://assets.coingecko.com/markets/images/501/large/toko.png?1706864476", "INDODAX": "https://assets.coingecko.com/markets/images/3/large/logogram-Indodax-new-_JPG_format.jpg?1706864243", "PINTU": "https://pintu.co.id/favicon.ico", "MEXC": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/544.png", "KUCOIN": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/311.png", "BITMART": "https://assets.coingecko.com/markets/images/239/standard/Bitmart.png?1706864341", "BITGET": "https://assets.coingecko.com/markets/images/540/standard/2023-07-25_21.47.43.jpg?1706864507", "COINBASE": "https://assets.coingecko.com/markets/images/23/standard/Coinbase_Coin_Primary.png?1706864258", "UPBIT": "https://assets.coingecko.com/markets/images/117/standard/upbit.png?1706864294", "SUI": "https://assets.coingecko.com/asset_platforms/images/126/standard/sui-ocean-square.png?1727791325", "SOL": "https://assets.coingecko.com/asset_platforms/images/5/standard/solana.png?1706606708", "TON": "https://assets.coingecko.com/asset_platforms/images/142/small/tonblockchain.jpeg?1706606805", "WALLET": "https://assets.coingecko.com/coins/images/11085/standard/Trust.png?1696511026" };
+    const exchangeLogos = { "BINANCE": "https://assets.coingecko.com/markets/images/52/standard/binance.jpg", "BYBIT": "https://assets.coingecko.com/markets/images/698/standard/bybit_spot.png", "OKX": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/294.png", "GATE": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/302.png", "TOKOCRYPTO": "https://assets.coingecko.com/markets/images/501/large/toko.png", "INDODAX": "https://assets.coingecko.com/markets/images/3/large/logogram-Indodax-new-_JPG_format.jpg", "MEXC": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/544.png", "KUCOIN": "https://s2.coinmarketcap.com/static/img/exchanges/64x64/311.png" };
 
     window.onload = () => { migrateToUppercase(); document.getElementById('sort-order').value = localStorage.getItem('last_sort') || 'manual'; document.getElementById('currency-view').value = localStorage.getItem('last_cur') || 'IDR'; renderList(); fetchKurs(); fetchCoinMap(); fetchAll(); setInterval(fetchAll, 60000); };
 
@@ -335,7 +304,8 @@
         balances = newBalances; if(needsSave) saveAll();
     }
 
-    function switchTab(tab) { currentTab = tab; expandedItem = null; document.getElementById('tab-ex').classList.toggle('active', tab === 'exchange'); document.getElementById('tab-coin').classList.toggle('active', tab === 'coin'); renderList(); }
+    // --- CORE LOGIC ---
+    function switchTab(tab) { currentTab = tab; document.getElementById('tab-ex').classList.toggle('active', tab === 'exchange'); document.getElementById('tab-coin').classList.toggle('active', tab === 'coin'); renderList(); }
     function updateSettings() { localStorage.setItem('last_sort', document.getElementById('sort-order').value); localStorage.setItem('last_cur', document.getElementById('currency-view').value); renderList(); }
 
     async function fetchKurs() { try { const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR'); const d = await r.json(); if(d.price) { usdToIdr = parseFloat(d.price); document.getElementById('kurs-live').innerText = `USD/IDR: ${Math.round(usdToIdr).toLocaleString('id-ID')}`; updatePricesOnly(); } } catch(e) {} }
@@ -351,7 +321,6 @@
         updatePricesOnly(); isFetching = false;
     }
 
-    function handleLogoError(img, sym) { if(sym === 'IDR') { img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`; return; } const retry = parseInt(img.getAttribute('data-retry') || "0"); const srcArr = [`https://coinicons-api.vercel.app/api/icon/${sym.toLowerCase()}`, `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`]; if (retry < srcArr.length) { img.setAttribute('data-retry', retry + 1); img.src = srcArr[retry]; } else { img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`; } }
     function getCoinTotal(sym) { let t = 0; (coinSources[sym] || []).forEach(src => { const d = balances[sym]?.[src]; t += (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); }); return t; }
 
     function updatePricesOnly() {
@@ -374,7 +343,21 @@
         document.getElementById('total-all-usd').innerText = `$${totalAllUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     }
 
-    function toggleDetail(id) { const target = document.getElementById(`det-${id}`); if (!target) return; if (expandedItem && expandedItem !== id) { const oldEl = document.getElementById(`det-${expandedItem}`); if (oldEl) oldEl.style.display = 'none'; } if (target.style.display === 'block') { target.style.display = 'none'; expandedItem = null; } else { target.style.display = 'block'; expandedItem = id; } }
+    function toggleDetail(id) { 
+        const target = document.getElementById(`det-${id}`); 
+        if (!target) return; 
+        if (expandedItem && expandedItem !== id) { 
+            const oldEl = document.getElementById(`det-${expandedItem}`); 
+            if (oldEl) oldEl.style.display = 'none'; 
+        } 
+        if (target.style.display === 'block') { 
+            target.style.display = 'none'; 
+            expandedItem = null; 
+        } else { 
+            target.style.display = 'block'; 
+            expandedItem = id; 
+        } 
+    }
 
     function renderList() {
         const list = document.getElementById('main-list');
@@ -396,9 +379,9 @@
                 if (sortType === 'name') subKoin.sort((a, b) => a.localeCompare(b));
                 else if (sortType === 'value') subKoin.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
 
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details" style="display:${expandedItem === ex.name ? 'block' : 'none'}">${subKoin.map(s => {
                     const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
-                    return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amt"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Stk"></div><span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
+                    return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="any" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amt"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Stk"></div><span class="del-src" onclick="confirmModal('Hapus ${s}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')"><button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button></div></div></div>`;
             });
         } else {
@@ -407,7 +390,7 @@
             else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
             filtered.forEach(s => {
                 let subSrc = [...(coinSources[s]||[])];
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details">${subSrc.map(src => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="any" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details" style="display:${expandedItem === s ? 'block' : 'none'}">${subSrc.map(src => {
                     const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:'', staking:''};
                     return `<div class="source-row"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${src}','amount',this.value)" placeholder="Amt"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${src}','staking',this.value)" placeholder="Stk"></div><span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')"><button class="new-source-btn" onclick="addCustomSource('${s}')">+</button></div></div></div>`;
@@ -416,6 +399,7 @@
         list.innerHTML = html; updatePricesOnly();
     }
 
+    // --- UTILS ---
     function saveAll() { localStorage.setItem('my_assets_v2', JSON.stringify(watchlist)); localStorage.setItem('my_balances_v2', JSON.stringify(balances)); localStorage.setItem('my_coin_sources', JSON.stringify(coinSources)); localStorage.setItem('my_exchanges_v2', JSON.stringify(allExchanges)); }
     function updateBal(s, src, type, v) { if(!balances[s]) balances[s]={}; if(!balances[s][src] || typeof balances[s][src] !== 'object') balances[s][src] = {amount:0, staking:''}; balances[s][src][type] = v; saveAll(); updatePricesOnly(); }
     function handleGlobalAdd() { const input = document.getElementById('global-add-input'); const v = input.value.trim().toUpperCase(); if(!v) return; if(currentTab === 'exchange') { if(!allExchanges.includes(v)) { allExchanges.push(v); saveAll(); input.value = ""; renderList(); } else showToast(`Exchange ${v} sudah ada!`); } else { if(!watchlist.includes(v)) { watchlist.push(v); coinSources[v] = []; saveAll(); input.value = ""; fetchAll(); } else showToast(`Koin ${v} sudah ada!`); } }
@@ -443,7 +427,35 @@
         } catch (err) { showToast("Gagal!"); } }; reader.readAsText(file); 
     }
 
+    function renameProcess(oldVal, newVal, type) {
+        if (newVal && newVal.trim() !== "" && newVal.toUpperCase() !== oldVal) {
+            const upper = newVal.toUpperCase().trim();
+            if (type === 'exchange') {
+                allExchanges = allExchanges.map(ex => ex === oldVal ? upper : ex);
+                for (let c in coinSources) coinSources[c] = coinSources[c].map(src => src === oldVal ? upper : src);
+                for (let c in balances) { if (balances[c][oldVal]) { balances[c][upper] = balances[c][oldVal]; delete balances[c][oldVal]; } }
+            } else {
+                watchlist = watchlist.map(s => s === oldVal ? upper : s);
+                if (coinSources[oldVal]) { coinSources[upper] = coinSources[oldVal]; delete coinSources[oldVal]; }
+                if (balances[oldVal]) { balances[upper] = balances[oldVal]; delete balances[oldVal]; }
+            }
+            saveAll(); renderList();
+        }
+    }
+
     function exportToExcel() { let csv = "sep=,\nExchange,Koin,Amount,Staking,Harga USD,Total USD\n"; allExchanges.forEach(ex => { watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let am = (typeof d === 'object') ? (parseFloat(d.amount||0)) : parseFloat(d||0); let st = (typeof d === 'object') ? (parseFloat(d.staking||0)) : 0; if(am+st > 0) csv += `${ex},${s},${am},${st},${prices[s]||0},${((am+st)*(prices[s]||0)).toFixed(2)}\n`; } }); }); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = "PORTO.csv"; a.click(); }
+
+    function startHold(event, id, type) {
+        const touch = event.touches ? event.touches[0] : event;
+        startX = touch.clientX; startY = touch.clientY;
+        holdTimer = setTimeout(() => {
+            if (type === 'exchange') confirmModal(`HAPUS ${id}?`, 'delete', () => { allExchanges = allExchanges.filter(ex => ex !== id); saveAll(); renderList(); }, () => renamePopup(id, 'exchange'));
+            else confirmModal(`HAPUS ${id}?`, 'delete', () => { watchlist = watchlist.filter(s => s !== id); delete balances[id]; delete coinSources[id]; saveAll(); renderList(); }, () => renamePopup(id, 'coin'));
+        }, 700);
+    }
+    function moveHold(event) { if (!holdTimer) return; const touch = event.touches ? event.touches[0] : event; if (Math.abs(touch.clientX - startX) > 15 || Math.abs(touch.clientY - startY) > 15) clearHold(); }
+    function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
+
 </script>
 </body>
 </html>
