@@ -250,12 +250,17 @@
         const S = sym.toUpperCase();
 
         // Urutan pintu sesuai request
-const sources = [
-        `https://bin.bnbstatic.com/static/assets/logos/${S}.png`,
-        `https://s1.bycsi.com/bybit/assets/tokens/colors/${s}.png`,
-        `https://indodax.com/v2/logo/png/color/${s}.png`,
-        `https://mexc-img.oss-cn-hangzhou.aliyuncs.com/static/token/${S}.png`
-    ];
+     const sources = [
+
+            `https://www.bybit.com/bybit-icons/coin/${S}.png`,
+
+            `https://www.mexc.com/static/coin/${S}.png`,
+
+            `https://gate.io/images/coin_icon/64/${s}.png`,
+
+            `https://cryptoicons.org/api/color/${s}/400`
+
+        ];
         if (retry < sources.length) {
             img.setAttribute('data-retry', retry + 1);
             img.src = sources[retry];
