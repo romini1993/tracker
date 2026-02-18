@@ -11,7 +11,7 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100%; }
-        .container { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; }
+        .container { width: 100%; max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
 
         .top-flow { padding: 15px 15px 5px 15px; background: var(--bg); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -32,46 +32,52 @@
         .control-row { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 5px; }
         .control-select { background: var(--card); color: white; border: 1px solid #334155; border-radius: 6px; font-size: 10px; padding: 6px; outline: none; cursor: pointer; flex: 1; }
 
-        #main-list { padding: 5px 10px 200px 10px; }
+        #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* KONSEP GULUNGAN (BOTTOM BAR) */
-        #bottom-wrapper {
-            position: fixed;
+        /* MODIFIKASI LAYOUT BAWAH (STICKY & ROLL) */
+        .bottom-nav-container {
+            position: sticky;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
             width: 100%;
-            max-width: 420px;
             z-index: 1000;
-            pointer-events: none; /* Biar gak ganggu klik list koin di belakang */
-        }
-
-        #backup-scroll-area {
             background: var(--bg);
-            padding: 10px 15px;
-            border-top: 1px solid #334155;
-            transition: transform 0.1s linear; /* Biar sinkron sama scrollbar */
-            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         #add-bar-fixed {
             background: var(--bg);
-            padding: 10px 15px 20px 15px;
+            padding: 10px 15px;
             border-top: 1px solid #334155;
-            pointer-events: auto;
-            position: relative;
-            z-index: 1001; /* Selalu di depan menu backup */
+            z-index: 1002; /* Di depan backup */
+        }
+
+        #backup-scroll-area {
+            background: var(--bg);
+            padding: 0 15px 20px 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 250px;
+            overflow: hidden;
+            opacity: 1;
+        }
+
+        /* Class buat ngumpetin backup pas scroll */
+        .hide-backup {
+            max-height: 0 !important;
+            padding-bottom: 0 !important;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .search-box { display: flex; gap: 6px; }
         .search-box input { flex: 1; background: var(--card); border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; }
         .add-btn { background: var(--accent); border: none; padding: 0 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; color: #0f172a; }
 
-        .backup-section { display: flex; flex-wrap: wrap; gap: 6px; }
+        .backup-section { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
         .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
         .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
 
-        /* STYLE ASLI (DIKUNCI) */
+        /* STYLE ASLI (LOCK - JANGAN DIUBAH) */
         .coin-row { position: relative; margin-bottom: 8px; }
         .coin-card { background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; }
         .logo-wrapper { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid #475569; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; }
@@ -95,7 +101,7 @@
         .new-source-input { flex: 1; background: #000; border: 1px solid #475569; color: #fff; border-radius: 5px; padding: 7px 8px; font-size: 11px; outline: none; }
         .new-source-btn { background: #334155; color: var(--accent); border: none; border-radius: 5px; padding: 0 12px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
-        #toast-msg { visibility: hidden; min-width: 180px; background-color: #f87171; color: #fff; text-align: center; border-radius: 8px; padding: 8px; position: fixed; z-index: 2000; bottom: 150px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; }
+        #toast-msg { visibility: hidden; min-width: 180px; background-color: #f87171; color: #fff; text-align: center; border-radius: 8px; padding: 8px; position: fixed; z-index: 2000; bottom: 100px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; }
         #toast-msg.show { visibility: visible; }
     </style>
 </head>
@@ -135,7 +141,13 @@
 
     <div id="main-list"></div>
 
-    <div id="bottom-wrapper">
+    <div class="bottom-nav-container">
+        <div id="add-bar-fixed">
+            <div class="search-box">
+                <input type="text" id="global-add-input" placeholder="Tambah Baru..." onkeypress="if(event.key==='Enter') handleGlobalAdd()">
+                <button class="add-btn" onclick="handleGlobalAdd()">Tambah</button>
+            </div>
+        </div>
         <div id="backup-scroll-area">
             <div class="backup-section">
                 <button class="backup-btn" onclick="exportData()">📤 Backup</button>
@@ -143,39 +155,33 @@
                 <button class="backup-btn" onclick="exportToExcel()">📊 Excel</button>
                 <button class="backup-btn" onclick="resetApp()" style="color:var(--down)">⚠️ Reset</button>
                 <button class="backup-btn import-btn-full" onclick="openFilePicker('import')">📥 Import</button>
-                <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
-            </div>
-        </div>
-        <div id="add-bar-fixed">
-            <div class="search-box">
-                <input type="text" id="global-add-input" placeholder="Tambah Baru..." onkeypress="if(event.key==='Enter') handleGlobalAdd()">
-                <button class="add-btn" onclick="handleGlobalAdd()">Tambah</button>
             </div>
         </div>
     </div>
 </div>
 
 <div id="toast-msg"></div>
+<input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-    // LOGIC GULUNGAN BERLAWANAN (SINKRON SCROLLBAR)
+    // LOGIC SCROLL BERLAWANAN
     let lastScrollY = window.scrollY;
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const backupArea = document.getElementById("backup-scroll-area");
         
-        // Kalau scroll ke bawah (jempol ke atas), gulungan turun ngumpet
-        if (currentScrollY > lastScrollY && currentScrollY > 20) {
-            backupArea.style.transform = "translateY(100%)";
+        // Geser ke bawah (jempol ke atas) -> Backup ngumpet
+        if (currentScrollY > lastScrollY && currentScrollY > 10) {
+            backupArea.classList.add("hide-backup");
         } 
-        // Kalau scroll ke atas (jempol ke bawah), gulungan naik muncul
-        else {
-            backupArea.style.transform = "translateY(0)";
+        // Geser ke atas (jempol ke bawah) -> Backup muncul
+        else if (currentScrollY < lastScrollY) {
+            backupArea.classList.remove("hide-backup");
         }
         lastScrollY = currentScrollY;
     });
 
-    // DATA ASLI (DIKUNCI)
+    // --- JANGAN DIUBAH (LOGIC ASLI) ---
     let usdToIdr = 16000;
     let prices = {}; let changes = {}; let coinMapCG = {};
     let currentTab = 'exchange'; let isFetching = false;
