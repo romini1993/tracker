@@ -200,18 +200,31 @@
         setTimeout(() => input.focus(), 250);
     }
 
-    // SCROLL LOGIC (BALIK KE YANG LU SUKA)
+// --- REPLACE BAGIAN INI BRO ---
     let lastScrollY = window.scrollY;
     let holdTimer, startX, startY;
 
+    // Logic Scroll Baru: Anti-Geter di Mentok Bawah
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const b = document.getElementById("backup-scroll-area");
-        if (currentScrollY > lastScrollY && currentScrollY > 20) b.classList.add("hide-backup");
-        else if (currentScrollY < lastScrollY) b.classList.remove("hide-backup");
-        lastScrollY = currentScrollY;
-    });
+        
+        // Cek posisi mentok bawah (dikasih toleransi 50px biar gak bounce/geter)
+        const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 50);
 
+        if (isAtBottom) {
+            // Pas mau mentok bawah, paksa ngumpet biar gak bentrok sama efek bounce browser
+            b.classList.add("hide-backup");
+        } else {
+            // Logic scroll normal: turun ngumpet, naik muncul
+            if (currentScrollY > lastScrollY && currentScrollY > 20) {
+                b.classList.add("hide-backup");
+            } else if (currentScrollY < lastScrollY) {
+                b.classList.remove("hide-backup");
+            }
+        }
+        lastScrollY = currentScrollY;
+    }, { passive: true });
     function startHold(event, id, type) {
         const touch = event.touches ? event.touches[0] : event;
         startX = touch.clientX; startY = touch.clientY;
