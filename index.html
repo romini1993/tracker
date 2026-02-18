@@ -34,23 +34,26 @@
 
         #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* MODAL POPUP DI TENGAH (CENTER) */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { width: 100%; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: transform 0.2s ease; }
+        /* CUSTOM POPUP CENTER */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { width: 100%; max-width: 300px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: scale(1); }
-        .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 20px; color: var(--text); line-height: 1.4; }
-        .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+        .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 15px; color: var(--text); }
+        .modal-input { width: 100%; background: #000; border: 1px solid var(--accent); color: #fff; padding: 10px; border-radius: 8px; margin-bottom: 15px; outline: none; font-size: 13px; text-align: center; }
+        .modal-btns { display: flex; flex-direction: column; gap: 8px; }
         .modal-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
-        .btn-cancel { background: var(--gray-btn); color: white; }
-        .btn-edit { background: var(--gray-btn); color: var(--accent); }
-        .btn-delete { background: var(--red-muted); color: white; }
-        .btn-ok { background: var(--accent); color: #0f172a; }
+        
+        /* WARNA TOMBOL */
+        .btn-delete { background: var(--red-muted); color: white; order: -2; }
+        .btn-edit { background: var(--gray-btn); color: var(--accent); order: -1; }
+        .btn-ok { background: var(--accent); color: #0f172a; order: -2; }
+        .btn-cancel { background: var(--gray-btn); color: white; order: 0; }
 
         /* AREA BAWAH STICKY & ROLL */
         .bottom-nav-container { position: sticky; bottom: 0; width: 100%; z-index: 1000; background: var(--bg); display: flex; flex-direction: column; }
         #add-bar-fixed { background: var(--bg); padding: 10px 15px; border-top: 1px solid #334155; z-index: 1002; }
-        #backup-scroll-area { background: var(--bg); padding: 0 15px 20px 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 250px; overflow: hidden; opacity: 1; }
+        #backup-scroll-area { background: var(--bg); padding: 0 15px 20px 15px; transition: all 0.3s ease; max-height: 250px; overflow: hidden; opacity: 1; }
         .hide-backup { max-height: 0 !important; padding-bottom: 0 !important; opacity: 0; transform: translateY(20px); }
 
         .search-box { display: flex; gap: 6px; }
@@ -94,6 +97,7 @@
 <div id="custom-modal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div id="modal-title" class="modal-title">Konfirmasi</div>
+        <input type="text" id="modal-input-field" class="modal-input" style="display:none">
         <div id="modal-body" class="modal-btns"></div>
     </div>
 </div>
@@ -141,11 +145,11 @@
         </div>
         <div id="backup-scroll-area">
             <div class="backup-section">
-                <button class="backup-btn" onclick="exportData()">📤 Backup</button>
-                <button class="backup-btn" onclick="confirmModal('RESTORE DATA SEKARANG?','restore',()=>openFilePicker('restore'))">🔄 Restore</button>
+                <button class="backup-btn" onclick="openBackupPopup()">📤 Backup</button>
+                <button class="backup-btn" onclick="confirmModal('RESTORE DATA SEKARANG?','ok',()=>openFilePicker('restore'))">🔄 Restore</button>
                 <button class="backup-btn" onclick="exportToExcel()">📊 Excel</button>
                 <button class="backup-btn" onclick="confirmModal('RESET SEMUA DATA?','delete',()=>resetApp())" style="color:var(--down)">⚠️ Reset</button>
-                <button class="backup-btn import-btn-full" onclick="confirmModal('IMPORT DAN GABUNG DATA?','restore',()=>openFilePicker('import'))">📥 Import</button>
+                <button class="backup-btn import-btn-full" onclick="confirmModal('IMPORT DAN GABUNG DATA?','ok',()=>openFilePicker('import'))">📥 Import</button>
             </div>
         </div>
     </div>
@@ -155,8 +159,8 @@
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-    // POPUP LOGIC (TENGAH LAYAR)
-    function closeModal() { document.getElementById('custom-modal').classList.remove('active'); }
+    // POPUP LOGIC DENGAN URUTAN TOMBOL BARU
+    function closeModal() { document.getElementById('custom-modal').classList.remove('active'); document.getElementById('modal-input-field').style.display='none'; }
     
     function confirmModal(msg, type, onOk, onEdit = null) {
         const modal = document.getElementById('custom-modal');
@@ -174,11 +178,21 @@
         modal.classList.add('active');
     }
 
+    function openBackupPopup() {
+        const now = new Date();
+        const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        const modal = document.getElementById('custom-modal');
+        const input = document.getElementById('modal-input-field');
+        document.getElementById('modal-title').innerText = "SIMPAN FILE BACKUP";
+        input.style.display = 'block'; input.value = ts;
+        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-backup-ok">OKE</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+        document.getElementById('btn-backup-ok').onclick = () => { exportData(input.value); closeModal(); };
+        modal.classList.add('active');
+    }
+
     // LOGIC SCROLL & HOLD ANTI-GESER
     let lastScrollY = window.scrollY;
-    let holdTimer;
-    let startX, startY;
-
+    let holdTimer, startX, startY;
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
         const b = document.getElementById("backup-scroll-area");
@@ -191,33 +205,24 @@
         const touch = event.touches ? event.touches[0] : event;
         startX = touch.clientX; startY = touch.clientY;
         holdTimer = setTimeout(() => {
-            if (type === 'exchange') {
-                confirmModal(`HAPUS EXCHANGE ${id}?`, 'delete', () => {
-                    allExchanges = allExchanges.filter(ex => ex !== id);
-                    saveAll(); renderList();
-                }, () => renameItem(id, 'exchange'));
-            } else {
-                confirmModal(`HAPUS KOIN ${id}?`, 'delete', () => {
-                    watchlist = watchlist.filter(s => s !== id);
-                    delete balances[id]; delete coinSources[id];
-                    saveAll(); renderList();
-                }, () => renameItem(id, 'coin'));
-            }
+            if (type === 'exchange') confirmModal(`HAPUS EXCHANGE ${id}?`, 'delete', () => { allExchanges = allExchanges.filter(ex => ex !== id); saveAll(); renderList(); }, () => renamePopup(id, 'exchange'));
+            else confirmModal(`HAPUS KOIN ${id}?`, 'delete', () => { watchlist = watchlist.filter(s => s !== id); delete balances[id]; delete coinSources[id]; saveAll(); renderList(); }, () => renamePopup(id, 'coin'));
         }, 700);
     }
-
-    function moveHold(event) {
-        if (!holdTimer) return;
-        const touch = event.touches ? event.touches[0] : event;
-        const diffX = Math.abs(touch.clientX - startX);
-        const diffY = Math.abs(touch.clientY - startY);
-        if (diffX > 10 || diffY > 10) clearHold();
-    }
-
+    function moveHold(event) { if (!holdTimer) return; const touch = event.touches ? event.touches[0] : event; if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) clearHold(); }
     function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
 
-    function renameItem(oldVal, type) {
-        const newVal = prompt("Masukkan nama baru:", oldVal);
+    function renamePopup(oldVal, type) {
+        const modal = document.getElementById('custom-modal');
+        const input = document.getElementById('modal-input-field');
+        document.getElementById('modal-title').innerText = "RENAME " + oldVal;
+        input.style.display = 'block'; input.value = oldVal;
+        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+        document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
+        modal.classList.add('active');
+    }
+
+    function renameProcess(oldVal, newVal, type) {
         if (newVal && newVal.trim() !== "" && newVal.toUpperCase() !== oldVal) {
             const upper = newVal.toUpperCase().trim();
             if (type === 'exchange') {
@@ -260,8 +265,8 @@
             let upperCoin = coin.toUpperCase(); newBalances[upperCoin] = {};
             for (let src in balances[coin]) {
                 let upperSrc = src.toUpperCase();
-                if (typeof balances[coin][src] === 'object') { newBalances[upperCoin][upperSrc] = balances[coin][src]; } 
-                else { newBalances[upperCoin][upperSrc] = { amount: balances[coin][src], staking: '' }; }
+                if (typeof balances[coin][src] === 'object') newBalances[upperCoin][upperSrc] = balances[coin][src];
+                else newBalances[upperCoin][upperSrc] = { amount: balances[coin][src], staking: '' };
             }
         }
         balances = newBalances; if(needsSave) saveAll();
@@ -313,6 +318,7 @@
         const query = document.getElementById('filter-input').value.toUpperCase();
         const sortType = document.getElementById('sort-order').value;
         let html = "";
+        
         if (currentTab === 'exchange') {
             let exArr = allExchanges.map(ex => {
                 let t = 0; watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); t += (b * (prices[s] || 0)); }});
@@ -320,9 +326,15 @@
             }).filter(ex => ex.name.includes(query));
             if (sortType === 'name') exArr.sort((a, b) => a.name.localeCompare(b.name));
             else if (sortType === 'value') exArr.sort((a, b) => b.totalValue - a.totalValue);
+
             exArr.forEach(ex => {
                 let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
+                
+                // SINKRONISASI SORTING KOIN DI DALAM EXPAND
                 let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
+                if (sortType === 'name') subKoin.sort((a, b) => a.localeCompare(b));
+                else if (sortType === 'value') subKoin.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
+
                 html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
                     const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
                     return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="confirmModal('Hapus ${s} dari ${ex.name}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
@@ -354,11 +366,10 @@
     function resetApp() { localStorage.clear(); watchlist = []; balances = {}; coinSources = {}; allExchanges = []; prices = {}; changes = {}; renderList(); updatePricesOnly(); showToast("Data bersih!"); }
     function openFilePicker(mode) { currentMode = mode; document.getElementById('importFile').value = ""; document.getElementById('importFile').click(); }
 
-    function exportData() { 
+    function exportData(fileName) { 
         const data = { assets: watchlist, balances: balances, sources: coinSources, exchanges: allExchanges }; 
-        const now = new Date(); const ts = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + "_" + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0'); 
-        const fileName = prompt("Beri nama file backup:", `PORTO_${ts}`); 
-        if (!fileName) return; const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileName.toUpperCase().trim()}.json`; a.click(); 
+        const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileName.toUpperCase().trim()}.json`; a.click(); 
     }
 
     function handleFileSelect(event) { 
