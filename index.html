@@ -162,8 +162,12 @@
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-    // POPUP LOGIC HORIZONTAL
-    function closeModal() { document.getElementById('custom-modal').classList.remove('active'); document.getElementById('modal-input-field').style.display='none'; }
+   // --- POPUP LOGIC (REPLACEMENT) ---
+
+    function closeModal() { 
+        document.getElementById('custom-modal').classList.remove('active'); 
+        document.getElementById('modal-input-field').style.display='none'; 
+    }
     
     function confirmModal(msg, type, onOk, onEdit = null) {
         const modal = document.getElementById('custom-modal');
@@ -186,7 +190,9 @@
         if (onEdit) document.getElementById('btn-modal-edit').onclick = () => { closeModal(); onEdit(); };
         modal.classList.add('active');
     }
-function openBackupPopup() {
+
+    // Fungsi Backup - Kursor Otomatis di Belakang
+    function openBackupPopup() {
         const now = new Date();
         const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
         const modal = document.getElementById('custom-modal');
@@ -198,7 +204,6 @@ function openBackupPopup() {
         document.getElementById('btn-backup-ok').onclick = () => { exportData(input.value); closeModal(); };
         modal.classList.add('active');
         
-        // Trik biar kursor fokus ke belakang
         setTimeout(() => { 
             input.focus();
             let val = input.value;
@@ -206,20 +211,25 @@ function openBackupPopup() {
             input.value = val;
         }, 250);
     }
-    
-    function openBackupPopup() {
-        const now = new Date();
-        const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+
+    // Fungsi Rename - Kursor Otomatis di Belakang
+    function renamePopup(oldVal, type) {
         const modal = document.getElementById('custom-modal');
         const input = document.getElementById('modal-input-field');
-        document.getElementById('modal-title').innerText = "SIMPAN BACKUP";
-        input.style.display = 'block'; input.value = ts;
-        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-backup-ok">OKE</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
-        document.getElementById('btn-backup-ok').onclick = () => { exportData(input.value); closeModal(); };
+        document.getElementById('modal-title').innerText = "RENAME " + oldVal;
+        input.style.display = 'block'; 
+        input.value = oldVal;
+        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-rename-ok">SIMPAN</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+        document.getElementById('btn-rename-ok').onclick = () => { renameProcess(oldVal, input.value, type); closeModal(); };
         modal.classList.add('active');
-        setTimeout(() => input.focus(), 250);
+        
+        setTimeout(() => { 
+            input.focus();
+            let val = input.value;
+            input.value = '';
+            input.value = val;
+        }, 250);
     }
-
 // --- REPLACE BAGIAN INI BRO ---
     let lastScrollY = window.scrollY;
     let holdTimer, startX, startY;
