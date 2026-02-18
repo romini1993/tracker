@@ -351,40 +351,28 @@
         updatePricesOnly(); isFetching = false;
     }
 
-function handleLogoError(img, sym) {
-    // Khusus IDR pake inisial hijau
-    if (sym === 'IDR') {
-        img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`;
-        return;
+    function handleLogoError(img, sym) { if(sym === 'IDR') { img.parentElement.innerHTML = `<div class="logo-initial" style="background:#4ade80; color:#0f172a">RP</div>`; return; } const retry = parseInt(img.getAttribute('data-retry') || "0"); const srcArr = [`https://coinicons-api.vercel.app/api/icon/${sym.toLowerCase()}`, `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`]; if (retry < srcArr.length) { img.setAttribute('data-retry', retry + 1); img.src = srcArr[retry]; } else { img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`; } }
+    function getCoinTotal(sym) { let t = 0; (coinSources[sym] || []).forEach(src => { const d = balances[sym]?.[src]; t += (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); }); return t; }
+
+    function updatePricesOnly() {
+        const currencyView = document.getElementById('currency-view').value; let totalAllUsd = 0;
+        if (currentTab === 'exchange') {
+            allExchanges.forEach(ex => {
+                let exTotalUsd = 0; watchlist.forEach(sym => { if (coinSources[sym]?.includes(ex)) { const d = balances[sym]?.[ex]; let b = (typeof d === 'object') ? (parseFloat(d.amount||0) + parseFloat(d.staking||0)) : parseFloat(d||0); exTotalUsd += (b * (prices[sym] || 0)); } });
+                totalAllUsd += exTotalUsd; const el = document.getElementById(`val-ex-${ex}`); if (el) el.innerText = (currencyView === 'IDR') ? `Rp ${(exTotalUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${exTotalUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            });
+        } else {
+            watchlist.forEach(sym => {
+                const valUsd = getCoinTotal(sym) * (prices[sym] || 0); totalAllUsd += valUsd;
+                const elVal = document.getElementById(`val-coin-${sym}`); const elPrice = document.getElementById(`price-coin-${sym}`); const elChange = document.getElementById(`change-coin-${sym}`);
+                if (elVal) elVal.innerText = (currencyView === 'IDR') ? `Rp ${(valUsd * usdToIdr).toLocaleString('id-ID', {maximumFractionDigits:0})}` : `$${valUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                if (elPrice) elPrice.innerText = sym === 'IDR' ? 'STABLE IDR' : '$' + (prices[sym]||0).toLocaleString(undefined, {minimumFractionDigits: (prices[sym]||0) < 1 ? 4 : 2});
+                if (elChange) { const c = changes[sym] || "0.00"; elChange.innerText = `${parseFloat(c) >= 0 ? '+' : ''}${c}%`; elChange.className = `change-pct ${parseFloat(c) >= 0 ? 'up' : 'down'}`; }
+            });
+        }
+        document.getElementById('total-all-idr').innerText = `Rp ${Math.round(totalAllUsd*usdToIdr).toLocaleString('id-ID')}`;
+        document.getElementById('total-all-usd').innerText = `$${totalAllUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     }
-
-    // Ambil index retry yang lagi jalan
-    const retry = parseInt(img.getAttribute('data-retry') || "0");
-    const s = sym.toLowerCase();
-    const S = sym.toUpperCase();
-
-    // Daftar "Pintu" yang bakal diketok berurutan
-    const sources = [
-        `https://bin.bnbstatic.com/static/assets/logos/${S}.png`,           // 1. Binance
-        `https://s1.bycsi.com/bybit/assets/tokens/colors/${s}.png`,        // 2. Bybit
-        `https://indodax.com/v2/logo/png/color/${s}.png`,                  // 3. Indodax
-        `https://mexc-img.oss-cn-hangzhou.aliyuncs.com/static/token/${S}.png`, // 4. MEXC
-        `https://gimg2.gateimg.com/coin_icon/${S}.png`,                    // 5. Gate.io
-        `https://static.okx.com/cdn/oksupport/asset/currency/icon/${s}.png`, // 6. OKX
-        `https://assets.staticimg.com/cms/media/8u66v98f/kucoin.png`,      // 7. Kucoin (pola dinamis biasanya)
-        `https://coinicons-api.vercel.app/api/icon/${s}`,                  // 8. CryptoIcon (Gudang)
-        `https://assets.coincap.io/assets/icons/${s}@2x.png`               // 9. Coincap
-    ];
-
-    if (retry < sources.length) {
-        // Kalau gagal, naikkan index dan coba pintu berikutnya
-        img.setAttribute('data-retry', retry + 1);
-        img.src = sources[retry];
-    } else {
-        // Pintu terakhir: Kalau semua zonk, balik ke inisial 2 huruf
-        img.parentElement.innerHTML = `<div class="logo-initial">${sym.substring(0, 2).toUpperCase()}</div>`;
-    }
-}
 
     function toggleDetail(id) { const target = document.getElementById(`det-${id}`); if (!target) return; if (expandedItem && expandedItem !== id) { const oldEl = document.getElementById(`det-${expandedItem}`); if (oldEl) oldEl.style.display = 'none'; } if (target.style.display === 'block') { target.style.display = 'none'; expandedItem = null; } else { target.style.display = 'block'; expandedItem = id; } }
 
