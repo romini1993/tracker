@@ -34,14 +34,14 @@
 
         #main-list { padding: 5px 10px 20px 10px; min-height: 60vh; }
 
-        /* MODAL POPUP STYLE (GAYA BOTTOM BAR) */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: flex-end; }
-        .modal-content { width: 100%; background: var(--card); border-top: 2px solid var(--accent); border-radius: 20px 20px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
+        /* MODAL POPUP DI TENGAH (CENTER) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { width: 100%; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; transform: scale(0.9); transition: transform 0.2s ease; }
         .modal-overlay.active { display: flex; }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-        .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 15px; color: var(--subtext); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-title { font-weight: bold; font-size: 14px; text-align: center; margin-bottom: 20px; color: var(--text); line-height: 1.4; }
         .modal-btns { display: flex; flex-direction: column; gap: 10px; }
-        .modal-btn { padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .modal-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
         .btn-cancel { background: var(--gray-btn); color: white; }
         .btn-edit { background: var(--gray-btn); color: var(--accent); }
         .btn-delete { background: var(--red-muted); color: white; }
@@ -61,7 +61,7 @@
         .backup-btn { flex: 1 1 calc(50% - 3px); background: transparent; border: 1px solid #334155; color: var(--subtext); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
         .import-btn-full { flex: 1 1 100% !important; border: 1px solid var(--accent) !important; color: var(--accent) !important; }
 
-        /* STYLE ASLI (DIKUNCI) */
+        /* UKURAN INPUT 225px TETAP */
         .coin-row { position: relative; margin-bottom: 8px; }
         .coin-card { background: var(--card); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; cursor: pointer; user-select: none; -webkit-user-select: none; }
         .logo-wrapper { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid #475569; flex-shrink: 0; background: #000; display: flex; align-items: center; justify-content: center; }
@@ -142,10 +142,10 @@
         <div id="backup-scroll-area">
             <div class="backup-section">
                 <button class="backup-btn" onclick="exportData()">📤 Backup</button>
-                <button class="backup-btn" onclick="confirmModal('RESTORE DATA?','restore',()=>openFilePicker('restore'))">🔄 Restore</button>
+                <button class="backup-btn" onclick="confirmModal('RESTORE DATA SEKARANG?','restore',()=>openFilePicker('restore'))">🔄 Restore</button>
                 <button class="backup-btn" onclick="exportToExcel()">📊 Excel</button>
                 <button class="backup-btn" onclick="confirmModal('RESET SEMUA DATA?','delete',()=>resetApp())" style="color:var(--down)">⚠️ Reset</button>
-                <button class="backup-btn import-btn-full" onclick="confirmModal('IMPORT DATA?','restore',()=>openFilePicker('import'))">📥 Import</button>
+                <button class="backup-btn import-btn-full" onclick="confirmModal('IMPORT DAN GABUNG DATA?','restore',()=>openFilePicker('import'))">📥 Import</button>
             </div>
         </div>
     </div>
@@ -155,7 +155,7 @@
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="handleFileSelect(event)">
 
 <script>
-    // POPUP LOGIC (GANTIIN BROWSER)
+    // POPUP LOGIC (TENGAH LAYAR)
     function closeModal() { document.getElementById('custom-modal').classList.remove('active'); }
     
     function confirmModal(msg, type, onOk, onEdit = null) {
@@ -164,14 +164,9 @@
         const body = document.getElementById('modal-body');
         title.innerText = msg;
         let btns = `<button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
-        
-        if (onEdit) btns += `<button class="modal-btn btn-edit" id="btn-modal-edit">EDIT</button>`;
-        
-        if (type === 'delete') {
-            btns += `<button class="modal-btn btn-delete" id="btn-modal-ok">HAPUS</button>`;
-        } else {
-            btns += `<button class="modal-btn btn-ok" id="btn-modal-ok">OKE</button>`;
-        }
+        if (onEdit) btns += `<button class="modal-btn btn-edit" id="btn-modal-edit">EDIT / RENAME</button>`;
+        if (type === 'delete') btns += `<button class="modal-btn btn-delete" id="btn-modal-ok">HAPUS</button>`;
+        else btns += `<button class="modal-btn btn-ok" id="btn-modal-ok">OKE</button>`;
         
         body.innerHTML = btns;
         document.getElementById('btn-modal-ok').onclick = () => { closeModal(); onOk(); };
@@ -179,9 +174,10 @@
         modal.classList.add('active');
     }
 
-    // SCROLL LOGIC
+    // LOGIC SCROLL & HOLD ANTI-GESER
     let lastScrollY = window.scrollY;
     let holdTimer;
+    let startX, startY;
 
     window.addEventListener("scroll", () => {
         const currentScrollY = window.scrollY;
@@ -191,40 +187,43 @@
         lastScrollY = currentScrollY;
     });
 
-    function startHold(id, type) {
+    function startHold(event, id, type) {
+        const touch = event.touches ? event.touches[0] : event;
+        startX = touch.clientX; startY = touch.clientY;
         holdTimer = setTimeout(() => {
             if (type === 'exchange') {
-                confirmModal(`Hapus Exchange ${id}?`, 'delete', () => {
+                confirmModal(`HAPUS EXCHANGE ${id}?`, 'delete', () => {
                     allExchanges = allExchanges.filter(ex => ex !== id);
                     saveAll(); renderList();
                 }, () => renameItem(id, 'exchange'));
             } else {
-                confirmModal(`Hapus Koin ${id}?`, 'delete', () => {
+                confirmModal(`HAPUS KOIN ${id}?`, 'delete', () => {
                     watchlist = watchlist.filter(s => s !== id);
                     delete balances[id]; delete coinSources[id];
                     saveAll(); renderList();
                 }, () => renameItem(id, 'coin'));
             }
-        }, 600);
+        }, 700);
     }
 
-    function clearHold() { clearTimeout(holdTimer); }
+    function moveHold(event) {
+        if (!holdTimer) return;
+        const touch = event.touches ? event.touches[0] : event;
+        const diffX = Math.abs(touch.clientX - startX);
+        const diffY = Math.abs(touch.clientY - startY);
+        if (diffX > 10 || diffY > 10) clearHold();
+    }
+
+    function clearHold() { clearTimeout(holdTimer); holdTimer = null; }
 
     function renameItem(oldVal, type) {
         const newVal = prompt("Masukkan nama baru:", oldVal);
-        if (newVal && newVal !== oldVal) {
-            const upper = newVal.toUpperCase();
+        if (newVal && newVal.trim() !== "" && newVal.toUpperCase() !== oldVal) {
+            const upper = newVal.toUpperCase().trim();
             if (type === 'exchange') {
                 allExchanges = allExchanges.map(ex => ex === oldVal ? upper : ex);
-                for (let coin in coinSources) {
-                    coinSources[coin] = coinSources[coin].map(src => src === oldVal ? upper : src);
-                }
-                for (let coin in balances) {
-                    if (balances[coin][oldVal]) {
-                        balances[coin][upper] = balances[coin][oldVal];
-                        delete balances[coin][oldVal];
-                    }
-                }
+                for (let c in coinSources) coinSources[c] = coinSources[c].map(src => src === oldVal ? upper : src);
+                for (let c in balances) { if (balances[c][oldVal]) { balances[c][upper] = balances[c][oldVal]; delete balances[c][oldVal]; } }
             } else {
                 watchlist = watchlist.map(s => s === oldVal ? upper : s);
                 if (coinSources[oldVal]) { coinSources[upper] = coinSources[oldVal]; delete coinSources[oldVal]; }
@@ -234,7 +233,7 @@
         }
     }
 
-    // --- DATA & LOGIC ASLI (LOCK) ---
+    // --- DATA & LOGIC ASLI (DIKUNCI) ---
     let usdToIdr = 16000;
     let prices = {}; let changes = {}; let coinMapCG = {};
     let currentTab = 'exchange'; let isFetching = false;
@@ -324,7 +323,7 @@
             exArr.forEach(ex => {
                 let brand = ex.name.split(' ')[0]; let suffix = ex.name.split(' ').slice(1).join(' '); const logo = exchangeLogos[brand] || "";
                 let subKoin = watchlist.filter(s => coinSources[s]?.includes(ex.name));
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold('${ex.name}','exchange')" onmouseup="clearHold()" ontouchstart="startHold('${ex.name}','exchange')" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${ex.name}')" onmousedown="startHold(event,'${ex.name}','exchange')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${ex.name}','exchange')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper" style="background:#000">${logo ? `<img src="${logo}">` : `<div class="logo-initial">${brand.substring(0,2)}</div>`}</div><div class="info-group"><span class="symbol">${brand}</span>${suffix ? `<span style="font-size: 11px; color: var(--subtext); font-weight: normal;"> - ${suffix.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>` : ''}</div><div style="text-align:right; margin-right:10px;"><span id="val-ex-${ex.name}" style="font-weight:bold; font-size:14px;">-</span></div></div><div id="det-${ex.name}" class="details">${subKoin.map(s => {
                     const d = (balances[s] && balances[s][ex.name]) ? balances[s][ex.name] : {amount:'', staking:''};
                     return `<div class="source-row"><label class="source-label"><div class="logo-wrapper" style="width:20px; height:20px; border:none"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><span>${s}</span></label><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${ex.name}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${ex.name}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="confirmModal('Hapus ${s} dari ${ex.name}?','delete',()=>removeCoinFromExchange('${s}','${ex.name}'))">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="add-coin-to-${ex.name}" class="new-source-input" placeholder="Tambah Coin..." onkeypress="if(event.key==='Enter') addCoinToExchange('${ex.name}')"><button class="new-source-btn" onclick="addCoinToExchange('${ex.name}')">+</button></div></div></div>`;
@@ -335,7 +334,7 @@
             else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
             filtered.forEach(s => {
                 let subSrc = [...(coinSources[s]||[])];
-                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold('${s}','coin')" onmouseup="clearHold()" ontouchstart="startHold('${s}','coin')" ontouchend="clearHold()"><div class="logo-wrapper"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details">${subSrc.map(src => {
+                html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="https://coinicons-api.vercel.app/api/icon/${s.toLowerCase()}" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details">${subSrc.map(src => {
                     const d = (balances[s] && balances[s][src]) ? balances[s][src] : {amount:'', staking:''};
                     return `<div class="source-row"><span class="source-label" style="padding-left:4px">${src}</span><div class="input-wrapper"><input type="number" class="source-input" inputmode="decimal" value="${d.amount||''}" oninput="updateBal('${s}','${src}','amount',this.value)" placeholder="Amount"><input type="number" class="source-input" inputmode="decimal" value="${d.staking||''}" oninput="updateBal('${s}','${src}','staking',this.value)" placeholder="Staking"></div><span class="del-src" onclick="confirmModal('Hapus ${src}?','delete',()=>removeSource('${s}','${src}'))">×</span></div>`;
                 }).join('')}<div class="new-source-box"><input type="text" id="new-src-input-${s}" class="new-source-input" placeholder="Nama Source Baru..." onkeypress="if(event.key==='Enter') addCustomSource('${s}')"><button class="new-source-btn" onclick="addCustomSource('${s}')">+</button></div></div></div>`;
