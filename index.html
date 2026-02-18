@@ -186,7 +186,27 @@
         if (onEdit) document.getElementById('btn-modal-edit').onclick = () => { closeModal(); onEdit(); };
         modal.classList.add('active');
     }
-
+function openBackupPopup() {
+        const now = new Date();
+        const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        const modal = document.getElementById('custom-modal');
+        const input = document.getElementById('modal-input-field');
+        document.getElementById('modal-title').innerText = "SIMPAN BACKUP";
+        input.style.display = 'block'; 
+        input.value = ts;
+        document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-backup-ok">OKE</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+        document.getElementById('btn-backup-ok').onclick = () => { exportData(input.value); closeModal(); };
+        modal.classList.add('active');
+        
+        // Trik biar kursor fokus ke belakang
+        setTimeout(() => { 
+            input.focus();
+            let val = input.value;
+            input.value = '';
+            input.value = val;
+        }, 250);
+    }
+    
     function openBackupPopup() {
         const now = new Date();
         const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
