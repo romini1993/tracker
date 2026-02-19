@@ -119,21 +119,20 @@
             <button id="tab-ex" class="tab-btn active" onclick="switchTab('exchange')">Exchange</button>
             <button id="tab-coin" class="tab-btn" onclick="switchTab('coin')">Coin</button>
         </div>
-        <input type="text" id="filter-input" class="filter-input" placeholder="Cari..." oninput="renderList()">
-        <div class="control-row">
-            <select id="sort-order" class="control-select" onchange="updateSettings()">
-                <select id="sort-order" class="control-select" onchange="updateSettings()">
-    <option value="manual">Urutan: Default</option>
-    <option value="name">Urutan: A-Z</option>
-    <option value="value">Urutan: Terbesar</option>
-    <option value="gain">Urutan: Gain</option> </select>
-            </select>
-            <select id="currency-view" class="control-select" onchange="updateSettings()">
-                <option value="IDR">Mata Uang: IDR</option>
-                <option value="USD">Mata Uang: USD</option>
-            </select>
-        </div>
-    </div>
+       <input type="text" id="filter-input" class="filter-input" placeholder="Cari..." oninput="renderList()">
+<div class="control-row">
+    <select id="sort-order" class="control-select" onchange="updateSettings()">
+        <option value="manual">Urutan: Default</option>
+        <option value="name">Urutan: A-Z</option>
+        <option value="value">Urutan: Terbesar</option>
+        <option value="gain">Urutan: Gain</option>
+    </select>
+    
+    <select id="currency-view" class="control-select" onchange="updateSettings()">
+        <option value="IDR">Mata Uang: IDR</option>
+        <option value="USD">Mata Uang: USD</option>
+    </select>
+</div>
 
     <div id="main-list"></div>
 
