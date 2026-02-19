@@ -146,7 +146,7 @@
             <div class="backup-section">
                 <button class="backup-btn" onclick="openBackupPopup()">📤 Backup</button>
                 <button class="backup-btn" onclick="confirmModal('RESTORE DATA?','ok',()=>openFilePicker('restore'))">🔄 Restore</button>
-                <button class="backup-btn" onclick="exportToExcel()">📊 Excel</button>
+                <button class="backup-btn" onclick="openExcelPopup()">📊 Excel</button>
                 <button class="backup-btn" onclick="confirmModal('RESET SEMUA DATA?','delete',()=>resetApp())" style="color:var(--down)">⚠️ Reset</button>
                 <button class="backup-btn import-btn-full" onclick="confirmModal('IMPORT DAN GABUNG?','ok',()=>openFilePicker('import'))">📥 Import</button>
             </div>
@@ -223,6 +223,19 @@
             input.value = val;
         }, 250);
     }
+    function openExcelPopup() {
+    const now = new Date();
+    const ts = `PORTO_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    const modal = document.getElementById('custom-modal');
+    const input = document.getElementById('modal-input-field');
+    document.getElementById('modal-title').innerText = "EXPORT KE EXCEL (.CSV)";
+    input.style.display = 'block'; 
+    input.value = ts;
+    document.getElementById('modal-body').innerHTML = `<button class="modal-btn btn-ok" id="btn-excel-ok">OKE</button><button class="modal-btn btn-cancel" onclick="closeModal()">BATAL</button>`;
+    document.getElementById('btn-excel-ok').onclick = () => { exportToExcel(input.value); closeModal(); };
+    modal.classList.add('active');
+    setTimeout(() => { input.focus(); }, 250);
+}
 
     // --- SCROLL LOGIC ---
     let lastScrollY = window.scrollY;
@@ -461,8 +474,24 @@
         }
     }
 
-    function exportToExcel() { let csv = "sep=,\nExchange,Koin,Amount,Staking,Harga USD,Total USD\n"; allExchanges.forEach(ex => { watchlist.forEach(s => { if(coinSources[s]?.includes(ex)) { const d = balances[s]?.[ex]; let am = (typeof d === 'object') ? (parseFloat(d.amount||0)) : parseFloat(d||0); let st = (typeof d === 'object') ? (parseFloat(d.staking||0)) : 0; if(am+st > 0) csv += `${ex},${s},${am},${st},${prices[s]||0},${((am+st)*(prices[s]||0)).toFixed(2)}\n`; } }); }); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = "PORTO.csv"; a.click(); }
-
+    function exportToExcel(fileName) { 
+    let csv = "sep=,\nExchange,Koin,Amount,Staking,Harga USD,Total USD\n"; 
+    allExchanges.forEach(ex => { 
+        watchlist.forEach(s => { 
+            if(coinSources[s]?.includes(ex)) { 
+                const d = balances[s]?.[ex]; 
+                let am = (typeof d === 'object') ? (parseFloat(d.amount||0)) : parseFloat(d||0); 
+                let st = (typeof d === 'object') ? (parseFloat(d.staking||0)) : 0; 
+                if(am+st > 0) csv += `${ex},${s},${am},${st},${prices[s]||0},${((am+st)*(prices[s]||0)).toFixed(2)}\n`; 
+            } 
+        }); 
+    }); 
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); 
+    a.download = `${fileName.toUpperCase().trim()}.csv`; 
+    a.click(); 
+    showToast("Excel Berhasil Disimpan!");
+}
     function startHold(event, id, type) {
         const touch = event.touches ? event.touches[0] : event;
         startX = touch.clientX; startY = touch.clientY;
