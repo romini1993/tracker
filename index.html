@@ -290,10 +290,14 @@
         "BITGET": "https://assets.coingecko.com/markets/images/540/standard/2023-07-25_21.47.43.jpg?1706864507",
         "COINBASE": "https://assets.coingecko.com/markets/images/23/standard/Coinbase_Coin_Primary.png?1706864258",
         "UPBIT": "https://assets.coingecko.com/markets/images/117/standard/upbit.png?1706864294",
+        "RETRO": "https://assets.coincap.io/assets/icons/twt@2x.png", 
+        "TABUNGAN": "https://assets.coincap.io/assets/icons/twt@2x.png", 
+        "EXCLAIM": "https://assets.coincap.io/assets/icons/twt@2x.png", 
+        "IMTOKEN": "https://assets.coincap.io/assets/icons/twt@2x.png",
         "SUI": "https://assets.coingecko.com/asset_platforms/images/126/standard/sui-ocean-square.png?1727791325",
         "SOL": "https://assets.coingecko.com/asset_platforms/images/5/standard/solana.png?1706606708",
         "TON": "https://assets.coingecko.com/asset_platforms/images/142/small/tonblockchain.jpeg?1706606805",
-        "WALLET": "https://assets.coingecko.com/coins/images/11085/standard/Trust.png?1696511026"
+        "WALLET": "https://assets.coincap.io/assets/icons/twt@2x.png"
     };
 
     window.onload = () => { migrateToUppercase(); document.getElementById('sort-order').value = localStorage.getItem('last_sort') || 'manual'; document.getElementById('currency-view').value = localStorage.getItem('last_cur') || 'IDR'; renderList(); fetchKurs(); fetchCoinMap(); fetchAll(); setInterval(fetchAll, 60000); };
