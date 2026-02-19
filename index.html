@@ -489,19 +489,33 @@
     }
 
     function exportToExcel(fileName) { 
+    // Kita tambahin instruksi khusus buat Excel (sep=,)
+    // Dan pastiin semua angka pake format yang konsisten
     let csv = "sep=,\nExchange,Koin,Amount,Staking,Harga USD,Total USD\n"; 
+    
     allExchanges.forEach(ex => { 
         watchlist.forEach(s => { 
             if(coinSources[s]?.includes(ex)) { 
                 const d = balances[s]?.[ex]; 
                 let am = (typeof d === 'object') ? (parseFloat(d.amount||0)) : parseFloat(d||0); 
                 let st = (typeof d === 'object') ? (parseFloat(d.staking||0)) : 0; 
-                if(am+st > 0) csv += `${ex},${s},${am},${st},${prices[s]||0},${((am+st)*(prices[s]||0)).toFixed(2)}\n`; 
+                
+                if(am + st > 0) {
+                    let totalQty = am + st;
+                    let price = prices[s] || 0;
+                    let totalUsd = (totalQty * price).toFixed(2);
+                    
+                    // Kita pake tanda kutip ("") biar Excel ga salah baca angka desimal
+                    csv += `"${ex}","${s}","${am}","${st}","${price}","${totalUsd}"\n`; 
+                } 
             } 
         }); 
     }); 
+    
     const a = document.createElement('a'); 
-    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); 
+    // Kita pake format UTF-8 biar karakter khusus aman
+    const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8;'}); 
+    a.href = URL.createObjectURL(blob); 
     a.download = `${fileName.toUpperCase().trim()}.csv`; 
     a.click(); 
     showToast("Excel Berhasil Disimpan!");
