@@ -122,9 +122,11 @@
         <input type="text" id="filter-input" class="filter-input" placeholder="Cari..." oninput="renderList()">
         <div class="control-row">
             <select id="sort-order" class="control-select" onchange="updateSettings()">
-                <option value="manual">Urutan: Default</option>
-                <option value="name">Urutan: A-Z</option>
-                <option value="value">Urutan: Terbesar</option>
+                <select id="sort-order" class="control-select" onchange="updateSettings()">
+    <option value="manual">Urutan: Default</option>
+    <option value="name">Urutan: A-Z</option>
+    <option value="value">Urutan: Terbesar</option>
+    <option value="gain">Urutan: Gain</option> </select>
             </select>
             <select id="currency-view" class="control-select" onchange="updateSettings()">
                 <option value="IDR">Mata Uang: IDR</option>
