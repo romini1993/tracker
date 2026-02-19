@@ -419,8 +419,21 @@
             });
         } else {
             let filtered = watchlist.filter(s => s.includes(query));
-            if (sortType === 'name') filtered.sort((a, b) => a.localeCompare(b));
-            else if (sortType === 'value') filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
+            
+            // Logika Sortir Baru ada di sini bro
+            if (sortType === 'name') {
+                filtered.sort((a, b) => a.localeCompare(b));
+            } else if (sortType === 'value') {
+                filtered.sort((a, b) => (getCoinTotal(b)*(prices[b]||0)) - (getCoinTotal(a)*(prices[a]||0)));
+            } else if (sortType === 'gain') {
+                // Ini buat ngurutin dari kenaikan % tertinggi
+                filtered.sort((a, b) => {
+                    let gainA = parseFloat(changes[a] || -999);
+                    let gainB = parseFloat(changes[b] || -999);
+                    return gainB - gainA;
+                });
+            }
+
             filtered.forEach(s => {
                 let subSrc = [...(coinSources[s]||[])];
                 html += `<div class="coin-row"><div class="coin-card" onclick="toggleDetail('${s}')" onmousedown="startHold(event,'${s}','coin')" onmousemove="moveHold(event)" onmouseup="clearHold()" ontouchstart="startHold(event,'${s}','coin')" ontouchmove="moveHold(event)" ontouchend="clearHold()"><div class="logo-wrapper"><img src="any" onerror="handleLogoError(this, '${s}')"></div><div class="info-group"><span class="symbol">${s}</span><span id="change-coin-${s}" class="change-pct">-</span><br><span id="price-coin-${s}" style="font-size:10px; color:var(--subtext)">-</span></div><div style="text-align:right; margin-right:10px;"><span style="font-weight:bold; font-size:13px;">${getCoinTotal(s).toLocaleString()}</span><br><span id="val-coin-${s}" style="font-size:9px; color:var(--subtext)">-</span></div></div><div id="det-${s}" class="details" style="display:${expandedItem === s ? 'block' : 'none'}">${subSrc.map(src => {
